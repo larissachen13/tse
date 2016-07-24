@@ -1,0 +1,13 @@
+# output from settest.c
+# tests basic insert and find functionality of
+# set. Checks that a certain key can only be inserted
+# once. No such thing as overring keys, such as the
+# 'second' key. Also assures NULL data or keys
+# are ignored. Also tests the delete function 
+Successfully inserted first w/ data of 1 
+Successfully inserted second w/ data of 2 
+Not successful in inserting NULL data
+Not successful in inserting NULL key 
+Key 'second' already exists
+
+Data for first is: 1

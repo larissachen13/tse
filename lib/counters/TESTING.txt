@@ -1,0 +1,13 @@
+# Output from counterstest.c
+# Adds key 1 once, key 2 twice, and key 3 thrice. Checks the counter
+# for each to assure the add and counter functionality are
+# working correctly. Also tests that only positive or zero
+# keys are allowed to be insert. Make sure that counters_add
+# ignores any NULL key. Also assures the delete_counters is
+# freeing up all memory. 
+Adding each key, a key number of times
+Key has to be positive or zero
+Key 0 does not exist in this list
+Counter for key 1 is: 1
+Counter for key 2 is: 2
+Counter for key 3 is: 3

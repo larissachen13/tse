@@ -1,0 +1,24 @@
+# output from hashtabletest.c
+# Creates a hashtable with more keys than slots assuring
+# collision. Populates the hashtable, testing the
+# insertion of already existing keys and also NULL
+# keys. Also tests the find function to assure
+# the correct data was returned with the correct
+# string. Also tests the delete function which
+# correctly frees up everything. 
+Creating a hash table...
+Inserted <key, data> pair <a, 0> 
+Inserted <key, data> pair <b, 1> 
+Key 'b'' already exists in the hashtable
+Inserted <key, data> pair <c, 3> 
+Inserted <key, data> pair <d, 4> 
+Inserted <key, data> pair <e, 5> 
+Inserted <key, data> pair <f, 6> 
+Inserted <key, data> pair <g, 7> 
+Key 'g'' already exists in the hashtable
+Cannot insert key or data of value NULL
+
+Now testing the find function
+Found <key, data> pair <a, 0> 
+Found <key, data> pair <b, 1> 
+Key bb not found

@@ -1,0 +1,19 @@
+# Output from bagtest.c
+# Tests the basic insert and extract functions, assuring it operates
+# like a stack because of the way I implemeneted insert and extract.
+# Assures it works with different types as the data (strings, and ints)
+# Assures that items with the same data can be inserted (three, three)
+# Tries creating a new bag with a NULL delete function and it doesn't
+# work. Also tests the delete function. 
+Insert and Extract strings [one, two, three, three] into and out of bag
+Extracted String: Three
+Extracted String: Three
+Extracted String: Two
+Extracted String: One
+Can't extract more bag is empty
+
+Now adding and extracting integers [1, 2] into the empty bag
+Extracted int: 2
+Extracted int: 1
+Can't extract more bag is empty
+Delete function cannot be NULL 
