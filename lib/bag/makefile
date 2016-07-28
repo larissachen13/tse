@@ -4,13 +4,12 @@
 CC = gcc
 CFLAGS = -Wall -pedantic -std=c11 -ggdb
 
-bagtest: bag.o bagtest.o
-	$(CC) $(CFLAGS) bag.o bagtest.o -o bagtest
+bag: bag.o
+	$(CC) $(CFLAGS) bag.o -o bag
 
-bag.o: bag.h
-bagtest.o: bag.h
+bag.o: bag.h 
 
 clean:
 	rm -f *~
 	rm -f *.o
-	rm names
+	rm bag

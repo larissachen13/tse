@@ -16,8 +16,8 @@ to an indefinite size depending on the number of
 anything when trying to insert into a non-existing bag or insert a NULL
 piece of data. Inserting into a bag will always insert at the head of the
 bag. And extracting from the bag with `bag_extract(bag_t *bag)` will
-always extract the item located at the head of the bag.In other words,
-this bag operates like a stack. First in Last out. `bag_extract` should
+always extract the item located at the tail of the bag.In other words,
+this bag operates like a queue. First in First out. `bag_extract` should
 not delete the bag data structure. That is what`bag_delete(bag_t* bag)` is
 for. `bag_delete` should only be used if there was a previous `bag_new`
 call or the program will crash.
@@ -27,7 +27,7 @@ call or the program will crash.
   - Cannot create a new bag with a delete function that points to NULL
   - The delete function need to be able to handle the data passed into
     the module by the data, checking if the deleteitem ptr actually points to
-    a valid function is beyond the scope of this module 
+    a valid function is beyond the scope of this module
   - If an item is extracted, the bagitem's node will be freed
     but user must free the extracted data.
 

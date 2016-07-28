@@ -49,6 +49,9 @@ hashtable_t *hashtable_new(const int num_slots, void (*delete)(void*)) {
         free(new);
         return NULL;
       }
+      for (int i = 0; i < num_slots; i++) {
+        new->slots[i] = NULL;
+      }
       new->size = num_slots;
       new->deleteitem = delete;
     }
@@ -86,13 +89,12 @@ If ht is NULL, or you encounter other error, return false.
 */
 bool hashtable_insert(hashtable_t *ht, char *key, void *data) {
   unsigned long hash_code;
-  if (key == NULL || data == NULL) {
-    printf("Cannot insert key or data of value NULL\n");
+  if (key == NULL) {
+    printf("Cannot insert key\n");
     return false;
   }
   //try looking for the key, if found return
   if(hashtable_find(ht, key)) {
-    printf("Key \'%s\'' already exists in the hashtable\n", key);
     return false;
   } else {
     //insert into hashtable

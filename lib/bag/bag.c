@@ -57,6 +57,12 @@ bag_t *bag_new(void (*delete)(void*)) {
 */
 void bag_insert(bag_t *bag, void *data) {
   //if bag exists
+  if (data ==NULL) {
+    printf("data is null\n");
+  }
+  if (bag== NULL) {
+    printf("bag is null\n");
+  }
   if (bag != NULL && data != NULL) {
     //create new bag item
     bagitem_t *new_bagitem = bagitem_new(data);
@@ -69,25 +75,33 @@ void bag_insert(bag_t *bag, void *data) {
 }
 
 /*
-* bag_extract remove item at the head and returns it
+* bag_extract remove item at the tail and return it
 * arg: bag to remove an item from
 * returns: pointer to data of removed bag item, or null if no items
 */
 void *bag_extract(bag_t *bag) {
   void* data_extract;
-  bagitem_t *next;
+  bagitem_t *pred;
+  bagitem_t *curr;
 
   if (bag == NULL) {
     return NULL; //bag doesn't exist
   }
   if (bag->head == NULL) {
-    printf("Can't extract more bag is empty\n"); 
     return NULL;  //bag is empty
   } else {
-    next = bag->head->next;
-    data_extract = bag->head->data;
-    free(bag->head);
-    bag->head = next;
+    curr = bag->head;
+    while(curr->next!= NULL ) {
+      pred = curr;
+      curr = curr->next;
+    }
+    data_extract = curr->data;
+    if (curr == bag->head) {
+      bag->head = NULL;
+    } else {
+      pred->next = NULL;
+    }
+    free(curr);
     return data_extract;
   }
 }
@@ -116,8 +130,9 @@ void bag_delete(bag_t *bag) {
 */
 static bagitem_t *bagitem_new(void *data) {
   bagitem_t *new = malloc(sizeof(bagitem_t));
-  if (new == NULL)
+  if (new == NULL) {
     return NULL;
+  }
   else {
     new->data = data;
     new->next = NULL;

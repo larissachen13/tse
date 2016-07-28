@@ -138,8 +138,10 @@ void set_delete(set_t* set) {
     setitem_t* next;
     while(set->head != NULL) {
       next = set->head->next;
-      (*set->deleteitem)(set->head->data); //free data
-      free(set->head->key); //free key
+      if(set->head->key != NULL )
+        free(set->head->key); //free key
+      if (set->head->data != NULL)
+        (*set->deleteitem)(set->head->data);
       free(set->head);  //free node
       set->head = next;
     }
