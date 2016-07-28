@@ -29,7 +29,7 @@ void deletePage(void* data);
 
 /*
  * main- controller function that validates arguments and calls crawler-- the
- * function that handles the whole crawling process 
+ * function that handles the whole crawling process
  */
 int main(int argc, char* argv[]) {
   char* dir;
@@ -250,6 +250,7 @@ void pageScanner(WebPage* target, bag_t* bag, hashtable_t* pages) {
              logr("Added", target->depth, result);
            #endif
          }  else {
+           free(result); 
            free(dummyData);
          }
        }  else {
