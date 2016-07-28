@@ -12,7 +12,7 @@
 * Test w/ maxDepth not between 0-10
 * Test w/ maxDepth that is a decimal (causes an parameter error)
 
-## Custom testing file http://old-www.cs.dartmouth.edu/~larissachen13/tse *URL #1* 
+## Custom testing file http://old-www.cs.dartmouth.edu/~larissachen13/tse **URL #1** 
 ### Urls tested in this file 
   * foo.html : A non-existing page 
     --> Should be found & added, but fails to fetch
