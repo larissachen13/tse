@@ -4,44 +4,44 @@
 
 ## Argument-checking
 * Test w/ four arguments
-* Test w/ url pointing to invalid server (http://foo.edu)
-* Test w/url pointing to valid server but invalid page (http://old-www.cs.dartmouth.edu/foo)
+* Test w/ seed url pointing to invalid server (http://foo.edu)
+* Test w/ seed url pointing to valid server but invalid page (http://old-www.cs.dartmouth.edu/foo)
+    (This does not produce a program error, program continues but just fails to fetch 
+    this URL and does not write any files) 
 * Test w/ non-existing directory
 * Test w/ maxDepth not between 0-10
-* Test w/ maxDepth that is a decimal
+* Test w/ maxDepth that is a decimal (causes an parameter error)
 
-## http://old-www.cs.dartmouth.edu/~larissachen13/tse
-### Urls tested in this custom testing file
-  1. A non-existing page “foo.html”
+## Custom testing file http://old-www.cs.dartmouth.edu/~larissachen13/tse *URL #1* 
+### Urls tested in this file 
+  * foo.html : A non-existing page 
     --> Should be found & added, but fails to fetch
-  2. First given cs50 testing url
+  * http://old-www.cs.dartmouth.edu/~cs50/index.html: *URL #2*  
     --> Should be found, added, fetched, & saved
-  3. A repeat of URL #2
+  * A repeat of *URL #2*
     --> Should be found & added, but fails to fetch
-  4. A custom file that...
-      * holds the second given testing file
-      * holds a repeat of URL #2
-      * A URL pointing back to seed URL
+  * http://old-www.cs.dartmouth.edu/~larissachen13/tse2 *URL #3* 
+      * holds the second given testing file http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html *URL #4* 
+      * holds a repeat of *URL #2* <...~cs50/index.html> 
+      * A URL pointing back to seed URL *URL #1* 
     --> Should be found, added, fetched & saved (and also explored if
         maxDepth >2)
-  5. A cyclical link that points back to this URL:
-      http://old-www.cs.dartmouth.edu/~larissachen13/tsev
+  6. A cyclical link that points back to this seed URL *URL #1*
     --> Should be found, but not added
+    
 ## Crawling w/ depth = 0
-Explore the contents of http://old-www.cs.dartmouth.edu/~larissachen13/tse
+Explore the contents of http://old-www.cs.dartmouth.edu/~larissachen13/tse *#1* 
 & print it to pages/1
 
 ## Crawling w/ depth = 1
-Additionally, explore the pages linked in
-http://old-www.cs.dartmouth.edu/~larissachen13/tse
+Additionally, explore the contents of  *#2, #3* 
 
 ## Crawling w/ depth = 2
-Additionally, explore the pages linked in http://old-www.cs.dartmouth.edu/~cs50/index.html
-and http://old-www.cs.dartmouth.edu/~larissachen13/tse2
+Additionally, explore #2 and #3 w/ depth of 1 and #4 w/ depth of 0 
+ 
 
 ## Crawling w/ depth = 3
-Go deeper and explore http://old-www.cs.dartmouth.edu/~cs50/index.html w/ depth
-2 & explore http://old-www.cs.dartmouth.edu/~larissachen13/tse2 w/ depth 1.
+Additionally, explore #2 and #3 w/ depth of 2 and #4 w/ depth of 1 
 In http://old-www.cs.dartmouth.edu/~larissachen13/tse2 the only non-repeated
  URL to explore is http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html.
 
