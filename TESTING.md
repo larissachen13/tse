@@ -1,6 +1,7 @@
 # TESTING w/ test.sh
 
 ## Test Command: `test.sh`
+## Test Output: testingoutput.txt
 
 ## Argument-checking
 * Test w/ four arguments
@@ -43,14 +44,18 @@ Additionally, explore **#2 and #3** w/ depth of 1 and **#4** w/ depth of 0
 ## Crawling w/ depth = 3
 Additionally, explore **#2 and #3** w/ depth of 2 and **#4** w/ depth of 1 
 In http://old-www.cs.dartmouth.edu/~larissachen13/tse2 the only non-repeated
- URL to explore is http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html.
+URL to explore is http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html.
+
+
 
  ## Starting w/ a different URL
  `crawler http://old-www.cs.dartmouth.edu/~larissachen13/tse2 pages3 2`
  I also tested if I started at **#3** as my Seed URL and a depth of 2.
  * explore **#4 #2 and #1** at depth of 1.  Also
  URLS that were treated as repeats before were added and explored as they have
- yet to have been added to the bag.
+ yet to have been added to the bag when starting at this new seed URL
+ 
+ 
  
 
 
