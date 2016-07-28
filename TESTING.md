@@ -1,8 +1,8 @@
-#TESTING w/ test.sh
+# TESTING w/ test.sh
 
-##Test Command: `test.sh`
+## Test Command: `test.sh`
 
-##Argument-checking
+## Argument-checking
 * Test w/ four arguments
 * Test w/ url pointing to invalid server (http://foo.edu)
 * Test w/url pointing to valid server but invalid page (http://old-www.cs.dartmouth.edu/foo)
@@ -10,8 +10,8 @@
 * Test w/ maxDepth not between 0-10
 * Test w/ maxDepth that is a decimal
 
-##http://old-www.cs.dartmouth.edu/~larissachen13/tse
-###Urls tested in this custom testing file
+## http://old-www.cs.dartmouth.edu/~larissachen13/tse
+### Urls tested in this custom testing file
   1. A non-existing page “foo.html”
     --> Should be found & added, but fails to fetch
   2. First given cs50 testing url
@@ -48,6 +48,8 @@ In http://old-www.cs.dartmouth.edu/~larissachen13/tse2 the only non-repeated
  ## Starting w/ a different URL
  I also tested if I started at http://old-www.cs.dartmouth.edu/~larissachen13/tse2
  as my Seed URL and a depth of 2, it would then explore the contents of that page
- along w/ http://old-www.cs.dartmouth.edu/~cs50/index.html as expected. ALso
+ along w/ http://old-www.cs.dartmouth.edu/~cs50/index.html as expected. Also
  URLS that were treated as repeats before were added and explored as they have
  yet to have been added to the bag.
+ 
+
