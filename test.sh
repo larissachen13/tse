@@ -34,9 +34,10 @@ mkdir pages1 1> /dev/null
 echo -en '\n\n\ncrawler http://old-www.cs.dartmouth.edu/~larissachen13/tse pages1 1\n'
 crawler http://old-www.cs.dartmouth.edu/~larissachen13/tse pages1 1
 
+
 rm -rf pages2 1> /dev/null
 mkdir pages2 1> /dev/null
-echo -en '\n\n\n crawler http://old-www.cs.dartmouth.edu/~larissachen13/tse pages2 2\n'
+echo -en '\n\n\n crawler http://old-www.cs.dartmouth.edu/~larissachen13/tse pages2 3\n'
 crawler http://old-www.cs.dartmouth.edu/~larissachen13/tse pages2 3
 
 rm -rf pages3 1> /dev/null

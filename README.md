@@ -1,14 +1,14 @@
 # CS50 Labs 4-5-6: Tiny Search Engine
 
 
-##Usage:
+## Usage:
 `crawler.c` a standalone program that crawls the web and retrieves webpages
  starting from a “seed” URL. It parses the seed webpage, extracts any
  embedded URLs, then retrieves each of those pages, recursively,
  but limiting its exploration to a given “depth”.
 
-###usage: `crawler seedURL pageDirectory maxDepth`
-###where:
+### usage: `crawler seedURL pageDirectory maxDepth`
+### where:
   * seedURL is a valid internalURL meaning that it's a URL that can be
     normalized according to the web module and begins w/ the prefix
     http://old-www.cs.dartmouth.edu/
@@ -16,7 +16,7 @@
     pages of the crawling process
   * maxDepth represents a valid integer between 0 and 10 inclusive indicating
     the depth of the recursion
-###output:
+### output:
   html pages saved in the pageDirectory
 
 ### Example Command Lines

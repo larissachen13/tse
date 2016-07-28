@@ -1,8 +1,8 @@
-#TESTING w/ test.sh
+# TESTING w/ test.sh
 
-##Test Command: `test.sh`
+## Test Command: `test.sh`
 
-##Argument-checking
+## Argument-checking
 * Test w/ four arguments
 * Test w/ url pointing to invalid server (http://foo.edu)
 * Test w/url pointing to valid server but invalid page (http://old-www.cs.dartmouth.edu/foo)
@@ -10,8 +10,8 @@
 * Test w/ maxDepth not between 0-10
 * Test w/ maxDepth that is a decimal
 
-##http://old-www.cs.dartmouth.edu/~larissachen13/tse
-###Urls tested in this custom testing file
+## http://old-www.cs.dartmouth.edu/~larissachen13/tse
+### Urls tested in this custom testing file
   1. A non-existing page “foo.html”
     --> Should be found & added, but fails to fetch
   2. First given cs50 testing url
