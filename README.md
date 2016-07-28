@@ -17,7 +17,7 @@
 
 ### output:
   HTML pages saved as separate files w/ unique ids in the pageDirectory
-  #### where:
+#### where:
   * line 1 is the URL
   * line 2 is the depth
   * the rest is the content
