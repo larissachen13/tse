@@ -1,57 +1,48 @@
 # TESTING w/ test.sh
 
 ## Test Command: `test.sh`
-<<<<<<< HEAD
-=======
 ## Test Output: testingoutput.txt
->>>>>>> c72287de08196d3724a40927fc796fdc3b9b6d5f
 
 ## Argument-checking
 * Test w/ four arguments
 * Test w/ seed url pointing to invalid server (http://foo.edu)
 * Test w/ seed url pointing to valid server but invalid page (http://old-www.cs.dartmouth.edu/foo)
-    (This does not produce a program error, program continues but just fails to fetch 
-    this URL and does not write any files) 
+    (This does not produce a program error, program continues but just fails to fetch
+    this URL and does not write any files)
 * Test w/ non-existing directory
 * Test w/ maxDepth not between 0-10
 * Test w/ maxDepth that is a decimal (causes an parameter error)
 
-<<<<<<< HEAD
-## http://old-www.cs.dartmouth.edu/~larissachen13/tse
-### Urls tested in this custom testing file
-  1. A non-existing page “foo.html”
-=======
-## Custom testing file http://old-www.cs.dartmouth.edu/~larissachen13/tse **URL #1** 
-### Urls tested in this file 
-  * foo.html : A non-existing page 
->>>>>>> c72287de08196d3724a40927fc796fdc3b9b6d5f
+## Custom testing file http://old-www.cs.dartmouth.edu/~larissachen13/tse **URL #1**
+### Urls tested in this file
+  * foo.html : A non-existing page
     --> Should be found & added, but fails to fetch
   * http://old-www.cs.dartmouth.edu/~cs50/index.html: **URL #2**  
     --> Should be found, added, fetched, & saved
   * A repeat of **URL #2**
     --> Should be found & added, but fails to fetch
-  * http://old-www.cs.dartmouth.edu/~larissachen13/tse2 **URL #3** 
-      * holds the second given testing file http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html **URL #4** 
-      * holds a repeat of **URL #2** 
-      * A URL pointing back to seed URL **URL #1** 
+  * http://old-www.cs.dartmouth.edu/~larissachen13/tse2 **URL #3**
+      * holds the second given testing file http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html **URL #4**
+      * holds a repeat of **URL #2**
+      * A URL pointing back to seed URL **URL #1**
     --> Should be found, added, fetched & saved (and also explored if
         maxDepth >2)
   6. A cyclical link that points back to this seed URL **URL #1**
     --> Should be found, but not added
-    
+
 ## Crawling w/ depth = 0
-Explore the contents of http://old-www.cs.dartmouth.edu/~larissachen13/tse **#1** 
+Explore the contents of http://old-www.cs.dartmouth.edu/~larissachen13/tse **#1**
 & print it to pages/1
 
 ## Crawling w/ depth = 1
-Additionally, explore the contents of  **#2, #3** 
+Additionally, explore the contents of  **#2, #3**
 
 ## Crawling w/ depth = 2
-Additionally, explore **#2 and #3** w/ depth of 1 and **#4** w/ depth of 0 
- 
+Additionally, explore **#2 and #3** w/ depth of 1 and **#4** w/ depth of 0
+
 
 ## Crawling w/ depth = 3
-Additionally, explore **#2 and #3** w/ depth of 2 and **#4** w/ depth of 1 
+Additionally, explore **#2 and #3** w/ depth of 2 and **#4** w/ depth of 1
 In http://old-www.cs.dartmouth.edu/~larissachen13/tse2 the only non-repeated
 URL to explore is http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html.
 
@@ -64,7 +55,3 @@ URL to explore is http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html.
  URLS that were treated as repeats before were added and explored as they have
  yet to have been added to the bag when starting at this new seed URL
  
- 
- 
-
-
