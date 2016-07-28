@@ -1,0 +1,303 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/08-preprocessorpointers.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lecture 08 - C preprocessor, Pointers, Arrays</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/08-preprocessorpointers.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lecture 08 - C preprocessor, Pointers, Arrays</h1>
+  </header>
+
+  <div class="post-content">
+    <h2 id="the-c-preprocessor">The C Preprocessor</h2>
+
+<p>You will notice that a few lines, typically near the beginning of a C program, begin with the character <code class="highlighter-rouge">#</code>, aka ‘hash’, ‘pound’, or ‘sharp’. These lines are “C preprocessor directives” and are actually instructions (directives) to a special program called the “C preprocessor”. As its name suggests, the C preprocessor processes the text of a C program <em>before</em> the C compiler sees it. The preprocessor directives (all beginning with <code class="highlighter-rouge">#</code>) should begin in column 1 (the 1st column) of any source line on which they appear.</p>
+
+<p>The C preprocessor is very powerful but we will use it only for very specific purposes.  Most of the other common uses for preprocessor directives are either beyond the scope of this course, or unnecessary (and bad style) in modern C.</p>
+
+<h3 id="header-file-inclusion">Header file inclusion</h3>
+
+<p>The <code class="highlighter-rouge">#include</code> directive, often pronounced “pound include”, should appear at the beginning of a C program. It is used to literally copy the entire contents of another file at the point of the <code class="highlighter-rouge">#include</code> directive. A common <code class="highlighter-rouge">#include</code> directive, seen at the beginning of most C files, is</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>    <span class="cp">#include &lt;stdio.h&gt;
+</span></code></pre>
+</div>
+
+<p>This directive indicates that the contents of the file named <code class="highlighter-rouge">stdio.h</code> should be included at this point (the directive is replaced with the contents). There is no limit to the number of lines that may be included with this directive and, in fact, the contents of the included file may contain other <code class="highlighter-rouge">#include</code> directives which are handled in the same way. We say that the inclusions are nested and, of course, care should be taken to avoid duplicate or, even worse, recursive nestings!</p>
+
+<p>The example using <code class="highlighter-rouge">&lt;stdio.h&gt;</code>, above, demonstrates two important points. The filename itself appears between the characters <code class="highlighter-rouge">&lt; &gt;</code>. The use of these characters indicates that the enclosed filename should be found in the standard include directory <code class="highlighter-rouge">/usr/include</code>. The required file is then <code class="highlighter-rouge">/usr/include/stdio.h</code>.</p>
+
+<p>The standard include files are used to consistently provide system-wide data structures or declarations that are required in many different files. By having the standard include files centrally located and globally available, all C programmers are guaranteed of using the same data structures and declarations that they (all) require.</p>
+
+<p>Alternatively, the <code class="highlighter-rouge">" "</code> characters may also be used, as in the following example:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>    <span class="cp">#include "readline.h"
+</span></code></pre>
+</div>
+
+<p>to include the contents of the file <code class="highlighter-rouge">readline.h</code> at the correct point in the C program. Because double-quotes are used, the file is sought in the present working directory, that is <code class="highlighter-rouge">./readline.h</code>. The filename in double-quotes can actually be a pathname, if your source code is spread over several directories; for example,</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>    <span class="cp">#include "includes/readline.h"
+</span></code></pre>
+</div>
+
+<p>In both of the above examples the indicated filename had the <code class="highlighter-rouge">.h</code> extension. Whereas we have previously said that the extension of <code class="highlighter-rouge">.c</code> is expected by the C compiler, the use of <code class="highlighter-rouge">.h</code> is only a convention within UNIX. The <code class="highlighter-rouge">.h</code> indicates that the file is a <em>header file</em>, because they generally contain information required at the head (beginning) of a C program. Header files typically (and should) contain only <em>declarations</em> of C constructs, like data types, data structures, and constants used throughout the C program. In particular, <strong>include files should contain only <em>declarations</em>, and no <em>definitions</em>, of variables or functions.</strong></p>
+
+<h3 id="conditional-compilation">Conditional compilation</h3>
+
+<p>Another often used feature of the C preprocessor is the use of “conditional compilation directives”.</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cp">#define DEBUG
+</span><span class="p">...</span>
+<span class="cp">#ifdef DEBUG
+</span> <span class="p">...</span> <span class="n">code</span> <span class="k">for</span> <span class="n">use</span> <span class="n">when</span> <span class="n">DEBUG</span> <span class="n">is</span> <span class="n">defined</span>
+<span class="cp">#else // DEBUG
+</span> <span class="p">...</span> <span class="n">code</span> <span class="k">for</span> <span class="n">use</span> <span class="n">when</span> <span class="n">DEBUG</span> <span class="n">is</span> <span class="n">not</span> <span class="n">defined</span>
+<span class="cp">#endif // DEBUG
+</span></code></pre>
+</div>
+
+<p>The C preprocessor actually includes some code, and strips out other code, before passing it to the C compiler.  In the above example, we define the preprocessor constant called <code class="highlighter-rouge">DEBUG</code>, and later test its value with <code class="highlighter-rouge">#ifdef</code>.  Notice the use of comments on the <code class="highlighter-rouge">#else</code> and <code class="highlighter-rouge">#endif</code> lines to help readability.</p>
+
+<p>The above example is a common approach for debugging.  Even better, remove the <code class="highlighter-rouge">#DEBUG</code> line and let that be determined by the programmer at compile time:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cp">#ifdef DEBUG
+</span> <span class="p">...</span> <span class="n">code</span> <span class="k">for</span> <span class="n">use</span> <span class="n">when</span> <span class="n">DEBUG</span> <span class="n">is</span> <span class="n">defined</span>
+<span class="cp">#else // DEBUG
+</span> <span class="p">...</span> <span class="n">code</span> <span class="k">for</span> <span class="n">use</span> <span class="n">when</span> <span class="n">DEBUG</span> <span class="n">is</span> <span class="n">not</span> <span class="n">defined</span>
+<span class="cp">#endif // DEBUG
+</span></code></pre>
+</div>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>  mygcc -DDEBUG program.c -o program
+</code></pre>
+</div>
+
+<p>The program compiles (and behaves) differently with and without the compile-time switch <code class="highlighter-rouge">-DDEBUG</code>.</p>
+
+<h3 id="header-file-protection">Header file protection</h3>
+
+<p>The one place we really <em>must</em> use conditional compilation is in header files.  Look at our example <a href="/~cs50/examples/readline.h">readline.h</a> and <a href="/~cs50/examples/readline.c">readline.c</a>:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cm">/* 
+ * readline.h - a utility function to safely read one line of input
+ * See readline.c for documentation.
+ *
+ * CS50, July 2016
+ */</span>
+
+<span class="cp">#ifndef __READLINE_H__
+#define __READLINE_H__
+</span>
+<span class="cp">#include &lt;stdbool.h&gt;
+</span>
+<span class="k">extern</span> <span class="n">bool</span> <span class="n">readLine</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">len</span><span class="p">);</span>
+
+<span class="cp">#endif //  __READLINE_H__
+</span></code></pre>
+</div>
+
+<p>If the constant <code class="highlighter-rouge">__READLINE_H__</code> is not yet defined (<code class="highlighter-rouge">#ifndef</code>) then incude the remainder of the file up to <code class="highlighter-rouge">#endif</code>.  The first thing it does is to define that <code class="highlighter-rouge">__READLINE_H__</code>.  Thus, if a C file happens to include <code class="highlighter-rouge">readline.h</code> twice, which can happen in complex programs when header files include other include files, the C compiler won’t see multiple copies of the included code.  That is,</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cp">#include "readline.h"
+#include "readline.h"
+</span></code></pre>
+</div>
+
+<p>does not translate to</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="k">extern</span> <span class="n">bool</span> <span class="n">readLine</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">len</span><span class="p">);</span>
+<span class="k">extern</span> <span class="n">bool</span> <span class="n">readLine</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">len</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>but just to</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="k">extern</span> <span class="n">bool</span> <span class="n">readLine</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">len</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>The standard file <code class="highlighter-rouge">stdbool</code> protects itself this way, which is good, because a programmer may well write into her <code class="highlighter-rouge">.c</code> file something like</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+#include &lt;stdbool.h&gt;
+#include &lt;readline.h&gt;
+</span></code></pre>
+</div>
+
+<p>and, because <code class="highlighter-rouge">readline.h</code> also includes <code class="highlighter-rouge">stdbool.h</code>, the latter might get imported several times without that protection.</p>
+
+<blockquote>
+  <p>Why do we care?  Some include files can safely be repeated and the C compiler won’t care; actually, <code class="highlighter-rouge">readline.h</code> is one like that.  But others, e.g., if they declare global constants, will cause the compiler to complain about multiply-defined variables.</p>
+</blockquote>
+
+<h2 id="pointers">Pointers</h2>
+
+<p>Let’s continue with our exploration of chars, char*s, strings, arrays, and pointers.</p>
+
+<p>Check out this <a href="https://www.youtube.com/watch?v=5VnDaHBi8dM">animated explanation of pointers</a>. Fun!</p>
+
+<h2 id="dynamic-memory-allocation">Dynamic memory allocation</h2>
+
+<p>C does not have language support for dynamically allocating new ‘things’.  Instead, the programmer has to call a library function called <code class="highlighter-rouge">malloc()</code> to allocate a new chunk of memory from a region called the <code class="highlighter-rouge">heap</code>, and later call <code class="highlighter-rouge">free()</code> to return that chunk of memory to the heap.  The programmer has to remember to initialize the chunk of bytes received from <code class="highlighter-rouge">malloc()</code> - which otherwise should be assumed to contain random data.  The programmer has to be careful allocate a large enough chunk to hold the data she intends to store there, and not to use pointers to write “outside” that chunk of memory.  Lots of flexibility and power - but like most power, you must take great care in using it.</p>
+
+<blockquote>
+  <p>In Java, you can use <code class="highlighter-rouge">new</code> to dynamically create a new object, and <code class="highlighter-rouge">delete</code> to discard an object created with <code class="highlighter-rouge">new</code>, but for the most part the Java compiler and runtime handles object deletion and memory recovery automatically - it’s called ‘garbage collection.’</p>
+</blockquote>
+
+<p>Our examples today show how to use <code class="highlighter-rouge">malloc</code> to allocate space to store a string, and later, a <code class="highlighter-rouge">struct</code> holding aggregate types.</p>
+
+<h2 id="coding-style---memory-allocation">Coding style - memory allocation</h2>
+
+<p>Avoid sprinking calls to <code class="highlighter-rouge">malloc()</code> and <code class="highlighter-rouge">free()</code> throughout your code. Instead, think about the kinds of things you need to create and destroy, and write type-specific wrapper for each such type.  For example, if your program manipulates things of type <code class="highlighter-rouge">struct listnode</code>, you would write two functions:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>    <span class="k">struct</span> <span class="n">listnode</span> <span class="o">*</span><span class="n">new_listnode</span><span class="p">(...);</span>
+    <span class="kt">void</span> <span class="n">free_listnode</span><span class="p">(</span><span class="k">struct</span> <span class="n">listnode</span> <span class="o">*</span><span class="n">node</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>The first function calls <code class="highlighter-rouge">malloc(sizeof(struct listnode)</code> and initializes all of its contents, perhaps using parameters passed by the caller. The second calls <code class="highlighter-rouge">free(node)</code>.  Both involve careful error-checking code. See example <a href="/~cs50/examples/names6.c">names6.c</a>.</p>
+
+<p>There are many advantages to this approach:</p>
+
+<ul>
+  <li>The mainline code is more readable, because it’s clear what <code class="highlighter-rouge">new_listnode()</code> is doing.</li>
+  <li>The <code class="highlighter-rouge">new</code> function acts like a ‘constructor’ in object-oriented languages and can ensure the newly returned memory is initialized, or at least, not random bytes.</li>
+  <li>Code involving <code class="highlighter-rouge">malloc</code> can sometimes be tricky, and you isolate that trickiness in one spot and focus on getting it right once.</li>
+  <li>Some new types might need multiple <code class="highlighter-rouge">malloc</code> calls, as in our linked-list example <a href="/~cs50/examples/names6.c">names6.c</a>. All those <code class="highlighter-rouge">malloc</code> calls (and corresponding <code class="highlighter-rouge">free</code> calls) can be in the <code class="highlighter-rouge">new</code>/<code class="highlighter-rouge">free</code> functions.</li>
+  <li>You can insert debugging output or reference-counting logic, or set debugger breakpoints, in these <code class="highlighter-rouge">new</code>/<code class="highlighter-rouge">free</code> functions and immediately have that feature apply to <em>all</em> occurrences of your program’s work with this type.</li>
+</ul>
+
+<h2 id="data-structures-in-c">Data structures in C</h2>
+
+<p>C is not an object-oriented language like Java, Python, or C++.  It does not provide any language features to declare a ‘class’ or create and manipulate object ‘instances’ of that class.</p>
+
+<p>But C does provide two kinds of aggregate data: arrays and structures.</p>
+
+<h3 id="arrays">Arrays</h3>
+
+<p>We’ve seen examples with arrays of characters (aka strings) and arrays of character pointers, and even two-dimensional arrays of characters.  But one can also define arrays of other types:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>	<span class="kt">char</span> <span class="n">names</span><span class="p">[</span><span class="n">NumStudents</span><span class="p">][</span><span class="n">NameLength</span><span class="p">];</span>
+	<span class="kt">int</span> <span class="n">ages</span><span class="p">[</span><span class="n">NumStudents</span><span class="p">];</span>
+	<span class="kt">float</span> <span class="n">grades</span><span class="p">[</span><span class="n">NumStudents</span><span class="p">];</span>
+</code></pre>
+</div>
+
+<p>and so forth.</p>
+
+<blockquote>
+  <p>Sometimes you need to understand that an array name is, in effect, a pointer to the first spot in memory where that array’s data lives; thus, <code class="highlighter-rouge">ages</code> is of type <code class="highlighter-rouge">int*</code> and is a pointer to the first entry in the array, but <code class="highlighter-rouge">ages[0]</code> is of type <code class="highlighter-rouge">int</code> and is the value of that first entry in the array.  This concept comes up mostly in arrays of characters; <code class="highlighter-rouge">names</code> is of type <code class="highlighter-rouge">char**</code>, and even <code class="highlighter-rouge">names[0]</code> is of type <code class="highlighter-rouge">char*</code>, and <code class="highlighter-rouge">names[0][1]</code> is of type <code class="highlighter-rouge">char</code>.  In effect, <code class="highlighter-rouge">names</code> is an array of strings, and <code class="highlighter-rouge">names[0]</code> is the first string in the array; like other strings, <code class="highlighter-rouge">names[0]</code> is of type <code class="highlighter-rouge">char*</code>.</p>
+</blockquote>
+
+<h3 id="structs">Structs</h3>
+
+<p>C allows you to define an aggregate called a ‘struct’; like an object, it has data members. Unlike an object, it has no methods (function members).</p>
+
+<p>Continuing our above example, we could have defined a <code class="highlighter-rouge">struct</code> for each student, and then an array of <code class="highlighter-rouge">structs</code>, as follows:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>   <span class="k">struct</span> <span class="n">student</span> <span class="p">{</span>
+       <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="n">NameLength</span><span class="p">];</span>
+       <span class="kt">int</span> <span class="n">age</span><span class="p">;</span>
+       <span class="kt">float</span> <span class="n">grade</span><span class="p">;</span>
+   <span class="p">};</span>
+   <span class="k">struct</span> <span class="n">student</span> <span class="n">students</span><span class="p">[</span><span class="n">NumStudents</span><span class="p">];</span>
+</code></pre>
+</div>
+
+<p>Now we can refer to the first student as <code class="highlighter-rouge">student[0]</code>, the second student as <code class="highlighter-rouge">student[1]</code>, and so forth.  We can refer to the name of the first student as <code class="highlighter-rouge">student[0].name</code> and the age of the second student as <code class="highlighter-rouge">student[1].age</code>.</p>
+
+<p>Now we look at a few more examples:</p>
+
+<ul>
+  <li><a href="/~cs50/examples/names1.c">names1.c</a>: read a list of names to an array</li>
+  <li><a href="/~cs50/examples/names2.c">names2.c</a>: assume names end in periods</li>
+  <li><a href="/~cs50/examples/names3.c">names3.c</a>: use malloc; sort names; casting</li>
+  <li><a href="/~cs50/examples/names4.c">names4.c</a>: use a linked list instead of an array</li>
+  <li><a href="/~cs50/examples/names5.c">names5.c</a>: keep the linked-list sorted</li>
+  <li><a href="/~cs50/examples/names6.c">names6.c</a>: keep the list sorted, but then remove duplicates</li>
+</ul>
+
+<p>In the examples <a href="/~cs50/examples/names5.c">names5.c</a> and <a href="/~cs50/examples/names5.c">names6.c</a>, we declare a <code class="highlighter-rouge">struct listnode</code> and use it to build a linked list.  There we see a different notation: instead of <code class="highlighter-rouge">.</code> to refer to a member of a struct, we have to use <code class="highlighter-rouge">-&gt;</code> to dereference the pointer and refer to member of the pointee.</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>   <span class="k">struct</span> <span class="n">student</span> <span class="n">alice</span><span class="p">;</span>			<span class="c1">// a single struct representing alice
+</span>   <span class="k">struct</span> <span class="n">student</span> <span class="o">*</span> <span class="n">sp</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">alice</span><span class="p">;</span>	<span class="c1">// a pointer, initialized to point at alice
+</span>   
+   <span class="c1">// the following three all do the same thing.
+</span>   <span class="kt">int</span> <span class="n">age</span> <span class="o">=</span> <span class="n">alice</span><span class="p">.</span><span class="n">age</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">age</span> <span class="o">=</span> <span class="n">sp</span><span class="o">-&gt;</span><span class="n">age</span><span class="p">;</span>
+   <span class="kt">int</span> <span class="n">age</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">sp</span><span class="p">).</span><span class="n">age</span><span class="p">;</span>
+</code></pre>
+</div>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

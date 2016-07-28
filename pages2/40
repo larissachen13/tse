@@ -1,0 +1,236 @@
+http://old-www.cs.dartmouth.edu/~cs50/Labs/Lab4.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lab 4 - Crawler</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Labs/Lab4.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lab 4 - Crawler</h1>
+  </header>
+
+  <div class="post-content">
+    <h2 id="assignment-and-what-to-hand-in">Assignment, and what to hand in</h2>
+
+<p>Write the <em>crawler</em>, first sub-system of the Tiny Search Engine.</p>
+
+<ol>
+  <li>
+    <p>To get started, <strong>fork</strong> a copy of our <a href="https://gitlab.cs.dartmouth.edu/xia/tse">TSE starter kit</a> to make a new project in your Gitlab account; see instructions in the README there.</p>
+  </li>
+  <li>
+    <p>In the terminal, <strong>copy</strong> your <a href="Lab3/">Lab 3</a> directories (<code class="highlighter-rouge">bag</code>, <code class="highlighter-rouge">counters</code>, <code class="highlighter-rouge">set</code>, <code class="highlighter-rouge">hashtable</code>) to the <code class="highlighter-rouge">lib</code> subdirectory in your brand-new repository, then <code class="highlighter-rouge">git add lib/*; git commit; git push</code>.</p>
+
+    <blockquote>
+      <p>You will need to add <code class="highlighter-rouge">bag_delete()</code> and <code class="highlighter-rouge">hashtable_delete()</code> if you did not write them in Lab 3.</p>
+    </blockquote>
+  </li>
+  <li>Write a program <code class="highlighter-rouge">crawler</code> that implements the Requirements Spec below, leveraging your data structures.  Please take special care that
+    <ul>
+      <li>your crawler has at least 1-second latency between page fetches, and</li>
+      <li>your crawler does not explore URLs that are not ‘internal’.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Update each <code class="highlighter-rouge">Makefile</code> as needed so you can build the whole crawler from the top-level directory by simply typing <code class="highlighter-rouge">make</code>, and clean up everything by typing <code class="highlighter-rouge">make clean</code>.</p>
+  </li>
+  <li>
+    <p>As you create files, add them to your git repository. <strong>Important:</strong> do not add any compiled files to git. In short: your repo should not contain any files built with <code class="highlighter-rouge">make</code> and removed by <code class="highlighter-rouge">make clean</code>. See hints below about how to best use git.</p>
+  </li>
+  <li>
+    <p>Replace the <code class="highlighter-rouge">README.md</code> file in the top-level directory, giving any special information about how to compile or use your crawler.  <em>See below about Markdown.</em></p>
+  </li>
+  <li>Add a <code class="highlighter-rouge">TESTING.md</code> file in the top-level directory, telling the grader how you tested your crawler. (You may find it helpful to write a <code class="highlighter-rouge">bash</code> script to execute your crawler, and/or a <code class="highlighter-rouge">make test</code> target.) Testing at depths 0, 1, 2, 3 should be sufficient. Some safe seeds you might test include
+    <ul>
+      <li>http://old-www.cs.dartmouth.edu/~cs50/index.html</li>
+      <li>http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html</li>
+    </ul>
+
+    <blockquote>
+      <p>You might construct your own test files in your CS Unix account in a directory like <code class="highlighter-rouge">~/public_html/tse</code> and crawl the URL <code class="highlighter-rouge">http://old-www.cs.dartmouth.edu/~YOURUSERID/tse</code></p>
+    </blockquote>
+  </li>
+  <li>When you are ready for final submission,
+    <ul>
+      <li><strong>Commit</strong> all uncommitted changes.</li>
+      <li><strong>Tag</strong>: <code class="highlighter-rouge">git tag lab4submit</code></li>
+      <li><strong>Push</strong>: <code class="highlighter-rouge">git push --tags</code> to ensure the tags are pushed to the remote. See <a href="/~cs50/Lectures/12-git/tags.html">more about tags</a>.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>We will compile and run your crawler on our own set of test data.
+We will run <code class="highlighter-rouge">valgrind</code> on your program to look for memory leaks.
+<strong><em>Your code must compile with <code class="highlighter-rouge">make</code> and produce no compiler warnings.</em></strong>  If we find that your code has <strong>segmentation faults</strong>, we will send it back to you as soon as we can for repair; recall the <a href="/~cs50/Logistics/#grading">grading policy</a>.</p>
+
+<h3 id="extensions">Extensions</h3>
+
+<p>If you want to claim your 24h extension, create a file <code class="highlighter-rouge">EXTENSION</code> at the top-level directory of your repository. Don’t forget to <code class="highlighter-rouge">git push</code> <em>before the deadline!</em>, so we will see the file.
+For example,</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>touch EXTENSION
+<span class="gp">$ </span>git add EXTENSION
+<span class="gp">$ </span>git commit -m <span class="s2">"extension request"</span>
+<span class="gp">$ </span>git tag lab4submit     <span class="c"># add tag, as above</span>
+<span class="gp">$ </span>git push --tags        <span class="c"># push to gitlab, including tags</span>
+</code></pre>
+</div>
+
+<p><strong><em>Don’t forget!</em></strong> When you are ready to submit your code, remove <code class="highlighter-rouge">EXTENSION</code> as follows, <em>update your submission tag</em>, and blitz your grader.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>git rm EXTENSION
+<span class="gp">$ </span>git add EXTENSION
+<span class="gp">$ </span>git commit -m <span class="s2">"ready for grading"</span>
+<span class="gp">$ </span>git tag -d lab4submit  <span class="c"># remove the tag from earlier version</span>
+<span class="gp">$ </span>git tag lab4submit     <span class="c"># add tag to the new version</span>
+<span class="gp">$ </span>git push --tags        <span class="c"># push to gitlab, including tags</span>
+</code></pre>
+</div>
+
+<p>We pull a copy of your repository at the moment of the deadline, and once every 24h thereafter until the file is gone; your lab will not be graded as long as it contains an <code class="highlighter-rouge">EXTENSION</code> file.</p>
+
+<h3 id="markdown">Markdown</h3>
+
+<p>In this and subsequent labs, please provide README and TESTING files in Markdown format, that is, you should supply <code class="highlighter-rouge">README.md</code> and <code class="highlighter-rouge">TESTING.md</code>.  The Markdown syntax provides very simple (and readable) markup for headings, lists, italics, bold, and code snippets.  (This course website is written in Markdown.) See <a href="/~cs50/Resources/#markdown">Markdown resources</a>.</p>
+
+<h2 id="tse-crawler-requirements-spec">TSE Crawler Requirements Spec</h2>
+
+<p>The TSE crawler is a standalone program that crawls the web and retrieves webpages starting from a “seed” URL. It parses the seed webpage, extracts any embedded URLs, then retrieves each of those pages, recursively, but limiting its exploration to a given “depth”.</p>
+
+<p>The crawler <strong>shall</strong>:</p>
+
+<blockquote>
+  <ol>
+    <li>execute from a command line with usage syntax
+      <ul>
+        <li><code class="highlighter-rouge">./crawler seedURL pageDirectory maxDepth</code></li>
+        <li>where <code class="highlighter-rouge">seedURL</code> is considered as the initial URL,</li>
+        <li>where <code class="highlighter-rouge">pageDirectory</code> is a directory in which to download webpages, and</li>
+        <li>where <code class="highlighter-rouge">maxDepth</code> is the maximum crawl depth.</li>
+      </ul>
+    </li>
+    <li>crawl all ‘internal’ pages reachable from <code class="highlighter-rouge">seedURL</code>, following <code class="highlighter-rouge">href</code> links to a maximum depth of <code class="highlighter-rouge">maxDepth</code>; where <code class="highlighter-rouge">maxDepth=0</code> means that crawler only explores the page at <code class="highlighter-rouge">seedURL</code>, <code class="highlighter-rouge">maxDepth=1</code> means that crawler only explores the page at <code class="highlighter-rouge">seedURL</code> and those pages to which <code class="highlighter-rouge">seedURL</code> links, and so forth inductively. Do not fetch or explore pages that are not ‘internal’.</li>
+    <li>pause at least one second between page fetches.</li>
+    <li>write each explored page to the <code class="highlighter-rouge">pageDirectory</code> with a unique document ID,
+      <ul>
+        <li>wherein the document <code class="highlighter-rouge">id</code> starts at 1 and increments for each new page,</li>
+        <li>and the filename is of form <code class="highlighter-rouge">pageDirectory/id</code>,</li>
+        <li>and the first line of the file is the URL,</li>
+        <li>and the second line of the file is the depth,</li>
+        <li>and the rest of the file is the page content.</li>
+      </ul>
+    </li>
+  </ol>
+</blockquote>
+
+<p>It shall validate its command-line arguments:</p>
+
+<blockquote>
+  <ul>
+    <li><code class="highlighter-rouge">seedURL</code> is valid and internal (according to <code class="highlighter-rouge">IsInternalURL</code>)</li>
+    <li><code class="highlighter-rouge">pageDirectory</code> is a directory and is writable (see below)</li>
+    <li><code class="highlighter-rouge">maxDepth</code> is an integer &gt;=0 and not too big (&lt;=10).</li>
+  </ul>
+</blockquote>
+
+<p>A given url is ‘internal’ if <code class="highlighter-rouge">IsInternalURL(url)</code> returns true. See <code class="highlighter-rouge">web.h</code>.</p>
+
+<h3 id="tse-design-spec">TSE Design Spec</h3>
+
+<p>Please follow the <a href="/~cs50/Lectures/15-designcrawler/">TSE Crawler Design Spec</a> from class.</p>
+
+<h3 id="coding-style">Coding style</h3>
+
+<p>Please follow the <a href="/~cs50/Resources/CodingStyle.html">CS50 coding style guidelines</a>.</p>
+
+<p><strong><em>Your code must compile with no compiler warnings.</em></strong></p>
+
+<h1 id="hints-and-tips">Hints and tips</h1>
+
+<h3 id="review-the-lecture-notes">Review the lecture notes</h3>
+
+<p>There are lots of design tips in Lectures <a href="/~cs50/Lectures/14-websearch/">14</a>, <a href="/~cs50/Lectures/15-designcrawler/">15</a>, and <a href="/~cs50/Lectures/16-crawler.html">16</a>. Caveat: you should use the Requirements Specifications listed above, not any you find in the lectures.</p>
+
+<h3 id="use-valgrind-and-gdb-detect-and-find-bugs">Use valgrind and gdb detect and find bugs</h3>
+
+<p>In <a href="/~cs50/Lectures/10-debugging">Lecture 10</a> we learned about how to use <code class="highlighter-rouge">valgrind</code> and <code class="highlighter-rouge">gdb</code>; make use of them.</p>
+
+<h3 id="iswritabledirectory">IsWritableDirectory</h3>
+
+<p>Suppose you want to write a function <code class="highlighter-rouge">bool IsWritableDirectory(char *dir)</code>. The simplest way determine whether the <code class="highlighter-rouge">pageDirectory</code> is indeed a directory, and is writable (meaning, you can create files there), is to try to create a file there.  If you construct a string <code class="highlighter-rouge">filename</code> that is the directory name, followed by a slash <code class="highlighter-rouge">'/'</code>, followed by a file name like <code class="highlighter-rouge">.crawler</code>, you could call <code class="highlighter-rouge">fopen(filename, "w")</code>; if it returns NULL, then either the directory does not exist or is not writable.  If non-NULL, close the file.  It’s fine to leave <code class="highlighter-rouge">.crawler</code> in the page directory.</p>
+
+<h3 id="git-and-gitlab">Git and Gitlab</h3>
+
+<p>Refer back to the <a href="http://www.cs.dartmouth.edu/~cs50/Lectures/13-git/index.html">git lecture</a>.</p>
+
+<p><strong>Do not commit your crawler binary, object files, library, or data directory!</strong> The starter kit has been configured with files <code class="highlighter-rouge">.gitignore</code> and <code class="highlighter-rouge">lib/.gitignore</code>  so it will not commit the executable binary named <code class="highlighter-rouge">crawler</code>, the library archive <code class="highlighter-rouge">lib/cs50ds.a</code>, nor a directory named <code class="highlighter-rouge">data</code>.  These are large files and should not go into the repo or onto Gitlab.</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

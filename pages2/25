@@ -1,0 +1,89 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/10-debugging/passwordsolution.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Extra - password bug solution details</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/10-debugging/passwordsolution.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Extra - password bug solution details</h1>
+  </header>
+
+  <div class="post-content">
+    <p>In the password example we entered the wrong password but still managed to “authenticate” as if the pgoram was given the correct password.</p>
+
+<p>This outcome makes sense if you think about it. Our <code class="highlighter-rouge">guess</code> buffer was created to only hold 10 <code class="highlighter-rouge">char</code>’s and we were a little careless with our <code class="highlighter-rouge">fgets</code> statement (i.e., we forgot to limit the amount of text it would read in). Also, we had (unfortunately) created our <code class="highlighter-rouge">authenticated</code> flag just after our <code class="highlighter-rouge">guess</code> buffer. When the user of the program enters a guess that is greater than the length of the buffer that is intended to hold the guess, <code class="highlighter-rouge">fgets</code> happily keeps reading in characters and writing them to where it presumes a valid buffer lives. So, despite a bad guess from the user, it is still possible to craft an input such that the memory that holds the <code class="highlighter-rouge">authenticated</code> value gets changed to some non-zero value, effectively tricking the program into thinking that the user entered the correct password as their guess.</p>
+
+<p>We will leave it to you as an exercise to address the issue with our call to <code class="highlighter-rouge">fgets</code> and any other things that you can find/fix in order to make the password program work correctly.</p>
+
+<p>This is a fairly trivial example of a buffer overflow that results in undesirable behavior. Imagine, however, that our buffer overrun affected the return address and, upon returning from some function, our code returned to some malicious code (thinking it was the original caller). Then our machine would be executing code that we never intended for it to run! This would be bad news!</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

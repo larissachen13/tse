@@ -1,0 +1,778 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/10-debugging/index.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lecture 16 - Debugging with gdb and valgrind</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/10-debugging/">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lecture 16 - Debugging with gdb and valgrind</h1>
+  </header>
+
+  <div class="post-content">
+    <h2 id="introduction-to-debugging">Introduction to debugging</h2>
+
+<blockquote>
+  <p>“Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.” - Brian Kernighan</p>
+</blockquote>
+
+<p>As we have started to turn our attention towards writing larger, more complex C programs we have tried to stress the importance of debugging incorrect or suspicious behavior in programs as well as documenting in detail how those programs have been tested. The goal in making debugging and testing a priority is building programs in such a way that we are confident that they are robust and correct.</p>
+
+<p>Alas, despite our great intentions to compose quality software, bugs still find their way into our code. Bugs are such an inevitablity in fact that many people have tried to estimate the number of bugs per some number of lines of code (LoC). <a href="http://www.mayerdan.com/ruby/2012/11/11/bugs-per-line-of-code-ratio/">Some people</a> believe the underlying takeaway is that our code should be as concise/complex as needed so that we can have fewer lines of code. In this class, however, we take the stance that everyone should write clear code and should avoid the use of overly complex code because this can result in code that is <em>extremely</em> difficult to debug when those inevitable bugs crop up. The words of Brian Kernighan (above) ring loud and clear on this topic.</p>
+
+<p>In this lecture we will take a look at a couple of popular tools that are used for debugging C programs. In a later lecture we will focus more on various approaches to testing.</p>
+
+<p>Feel free to skip these notes if you write perfect, bug free code ;-)</p>
+
+<h2 id="techniques-for-limiting-those-pesky-bugs">Techniques for limiting those pesky bugs</h2>
+
+<blockquote>
+  <p>“Don’t Panic” – Hitchiker’s Guide to the Galaxy</p>
+</blockquote>
+
+<p>The trouble with bugs is that no two are the same. Bugs can be simple: bad pointers and array subscript errors; while others are sometime difficult to debug: the systems might run for days and then fails because of a slow memory leak or numeric overflow problem. Programmers aim to understand the nature of the bug they are trying to swat: <em>is it reproducible?</em> (does it always fail under the same set of conditions), <em>does it always manifest itself in the same way?</em>, and so on. These are clues that help track down those pesky bugs in complex systems. To some degree being a good debugger of C code comes with experience.</p>
+
+<p>By now you are used to segfaults and seeing files such as core dumps in your directory when you run your program and something goes wrong (unless your are writing/compiling/running programs on the CS machines—there are details near the end of this lecture about accessing and debugging core files on the CS machines). You may have heard others mention tools like the GNU debugger (<code class="highlighter-rouge">gdb</code>) and Valgrind (<code class="highlighter-rouge">valgrind</code>)—or even have some experience using these tools yourself— which can be an invaluable aid in solving problems. Through a set of examples we will show how to debug problems in a systematic manner. But first let’s discuss why bugs occur and what technques other than running <code class="highlighter-rouge">gdb</code> help.</p>
+
+<p>The complexity of a program is related to the number of interacting components; for example, the crawler interacts with the external <code class="highlighter-rouge">libcurl</code> library. There is a line of thought that says as a rule of thumb the number of bugs grows with the number of interactions. Reducing the complexity and interactions enables us to focus in on the location of bugs in code. Gordon Bell summed it up this way:</p>
+
+<blockquote>
+  <p>“The cheapest, fastest, and most reliable components of a computer system are the ones that aren’t there.”
+ – <a href="http://research.microsoft.com/en-us/um/people/gbell/">Gordon Bell</a></p>
+</blockquote>
+
+<p>Gordon’s point is that the importance of a simple design cannot be overemphasized.</p>
+
+<p>Debugging problems ranges from easy, moderate, or even all the way through downright super hard. Techniques that help reduce degugging time include:</p>
+
+<ul>
+  <li><strong>a good design and design methodology;</strong></li>
+  <li><strong>consistent style (e.g., use C program idioms as much as possible);</strong></li>
+  <li><strong>boundary condition tests;</strong></li>
+  <li><strong>assertions and sanity testing;</strong></li>
+  <li><strong>defensive programming;</strong></li>
+  <li><strong>designing for testing;</strong></li>
+  <li><strong>avoid files that have a large number of functions, and functions that have a large number of lines; Aim for functions that do one thing, and do it well!</strong></li>
+  <li><strong>limit global data whenever possible; and</strong></li>
+  <li><strong>leverage desk checking tools.</strong></li>
+</ul>
+
+<p>While we’ve already discussed some of these topics in this course, we will discuss more of them in this lecture and in future lectures.</p>
+
+<h2 id="approaches-to-debugging">Approaches to debugging</h2>
+
+<p>When tracking down pesky bugs we can think of the following steps to finding and correcting them—a sort of “bug lifecycle”:</p>
+
+<ul>
+  <li><strong>Testing:</strong> Finding out what bugs exist. We have already designed some simple tests for programs we’ve written in this class already. In a future lecture we will look at more approaches to testing.</li>
+  <li><strong>Stabilization:</strong> Try and make the bugs reproducible (identify the conditions that cause a particular bug every time).</li>
+  <li><strong>Localization:</strong> Identify the function/line of the code responsible. If it repeated anywhere, then <em>refactor</em> the code.
+    <ul>
+      <li>“Refactor” means clean it up, reorganize it, improve readability/testability, etc., all without changing the code’s behavior.</li>
+      <li>Be sure to run unit tests before and after refactoring to ensure you “did no harm.”</li>
+    </ul>
+  </li>
+  <li><strong>Correction:</strong> Fix the code!</li>
+  <li><strong>Verification:</strong> Test the code fix and confirm it works. Then imagine other boundary-case examples that are related to the one that caused this bug to occur and test those while you’re here.</li>
+</ul>
+
+<p>Even in light of the above mentioned steps to finding and correcting bugs, there are many ways that people approach debugging their programs when issues arise…</p>
+
+<ul>
+  <li>They don’t.</li>
+  <li>They sift through warning/error messages; once all of the messages are gone, they assume their program is correct.</li>
+  <li>They use <code class="highlighter-rouge">printf</code>-style debugging (i.e., use <code class="highlighter-rouge">printf</code> statements strategically placed throughout code to help with inspection of variables and control flow).</li>
+  <li>They use a specialized debugging tools/programs (e.g., plugins integrated into your favorite IDE, commandline tools like <code class="highlighter-rouge">gdb</code> and <code class="highlighter-rouge">valgrind</code>).</li>
+</ul>
+
+<p>Hopefully it is clear that <em>not</em> debugging is a bad idea. Eliminating all of the warnings and errors is a good idea (and indeed is required when submitting assignments in cs50 :) but without proper testing there is no guarantee that your program is correct. In the following sections we will discuss some of the other approaches to debugging.</p>
+
+<h2 id="the-printf-approach-to-debugging">The <code class="highlighter-rouge">printf</code> approach to debugging</h2>
+
+<p>“All I need is <code class="highlighter-rouge">printf</code>, right?”</p>
+
+<p>Up until now you have been using mostly <code class="highlighter-rouge">printf()</code> (or its variants) to help you debug your code. That can only get you so far. Many different types of errors or bugs can exist in software. For example, you may have bug free code but the performance of the system is abysmal. How do you find performance errors in your code - could it be the choice of data structure is too “slow”, the structure of your code is awful, or perhaps the algorithms are a bad match for the system hardware or a particular set of input data? What happens if you code looks error free but you have memory leaks? You’ll get little help from <code class="highlighter-rouge">printf()</code> for these.</p>
+
+<p>Worse, the underlying bug may even interfere with <code class="highlighter-rouge">printf()</code>’s limited contribution to your efforts. For example, if you have a segfault that occurs after your <code class="highlighter-rouge">printf()</code> is executed but its string never gets displayed because the process seg faults—you might think that the bug occurs before your <code class="highlighter-rouge">printf</code> when really the bug happens much later. The takeaway here is that <code class="highlighter-rouge">printf</code> is not your friend in these examples, rather it’s a red herring. What happens if your system runs for hours and only under a certain set of system conditions the code fails. Working your way through 1000s of <code class="highlighter-rouge">printf</code> statements may not help. When a bug is buried deep in the execution of your software you need sophisticated tools to track those down. You need more than <code class="highlighter-rouge">printf()</code> to attack these bugs. This lecture talks about tools to help with performance issues, memory leaks and difficult bugs.</p>
+
+<h2 id="the-gnu-debugger-gdb">The GNU Debugger (GDB)</h2>
+
+<p>To get started type <code class="highlighter-rouge">man gdb</code> at the command line. The web also has good information on <code class="highlighter-rouge">gdb</code>: for a detailed article check out: <a href="http://ace.cs.ohiou.edu/morton/docs/gdb_manual/gdb.html">the GDB manual</a>.  It should be no surprise that the <code class="highlighter-rouge">emacs</code> editor also supports <code class="highlighter-rouge">gdb</code> - see <a href="http://tedlab.mit.edu/~dr/gdbintro.html">An Introduction To Using GDB Under Emacs</a>. When learning a new tool, such as <code class="highlighter-rouge">gdb</code>, it can be quite helpful to keep a a good <code class="highlighter-rouge">gdb</code> <a href="http://users.ece.utexas.edu/~adnan/gdb-refcard.pdf">quick reference card</a> handy - all you need to know in terms of command syntax is here.</p>
+
+<p><strong>NOTE:</strong> Before we get started using <code class="highlighter-rouge">gdb</code>, ensure your <code class="highlighter-rouge">mygcc</code> alias has the <code class="highlighter-rouge">-ggdb</code> flag - our standard <code class="highlighter-rouge">.bashrc</code> file defines <code class="highlighter-rouge">mygcc</code> with this flag. This flag ensures that useful metadata is packaged with your executable at compile time that <code class="highlighter-rouge">gdb</code> needs to help you debug your programs.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">alias </span>mygcc
+<span class="nb">alias </span><span class="nv">mygcc</span><span class="o">=</span><span class="sb">`</span>gcc -Wall -pedantic -std<span class="o">=</span>c11 -ggdb<span class="sb">`</span>
+</code></pre>
+</div>
+
+<p><strong>NOTE:</strong> For the curious student, it is also worth noting that you can use GDB to debug programs written not only in C but also in C++, FORTRAN, and Modula-2.</p>
+
+<p>GDB is invoked with the shell command <code class="highlighter-rouge">gdb</code>; it then prints its own prompt and accepts its own wide range of commands. Once started, it reads commands from the terminal until you tell it to exit with the GDB command <code class="highlighter-rouge">quit</code>. You can get online help from <code class="highlighter-rouge">gdb</code> itself by using the command <code class="highlighter-rouge">help</code>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ gdb
+GNU gdb (GDB) Fedora 7.10.1-31.fc23
+Copyright (C) 2015 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-redhat-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+&lt;http://www.gnu.org/software/gdb/bugs/&gt;.
+Find the GDB manual and other documentation resources online at:
+&lt;http://www.gnu.org/software/gdb/documentation/&gt;.
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+(gdb)
+</code></pre>
+</div>
+
+<p>You can run <code class="highlighter-rouge">gdb</code> with no arguments or options; but the most usual way to start GDB is with one argument, specifying an executable program as the argument:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>gdb program
+</code></pre>
+</div>
+
+<h3 id="gdb-demo">GDB Demo</h3>
+
+<p>In the following examples we will use a lot of the basic <code class="highlighter-rouge">gdb</code> commands - <code class="highlighter-rouge">break</code>, <code class="highlighter-rouge">run</code>, <code class="highlighter-rouge">next</code>, <code class="highlighter-rouge">step</code>, <code class="highlighter-rouge">continue</code>, <code class="highlighter-rouge">display</code>, <code class="highlighter-rouge">printf</code>, <code class="highlighter-rouge">x</code> (examine memory), <code class="highlighter-rouge">backtrace</code> (<code class="highlighter-rouge">bt</code> for short), and <code class="highlighter-rouge">frame</code> ( <a href="http://sourceware.org/gdb/current/onlinedocs/gdb/Frames.html">checkout stack frames</a>- this is an important concept in c and very useful for debugging and poking around in your code and looking at variables. These are most of the common commands.</p>
+
+<p>I strongly recommend that you go through the sequence of steps below and use these debugging commands. Don’t worry, you can’t break anything. Just like the shell commands you’ll only need a subset of the complete set of <code class="highlighter-rouge">gdb</code> commands to become a very effective debugger. Again, <code class="highlighter-rouge">printf</code> is for novices and not part of the hacker’s parlance or the necessary tools in your toolkit: <code class="highlighter-rouge">gdb</code> is!</p>
+
+<p>Let’s start by <code class="highlighter-rouge">cd</code>‘ing to the directory where we have some program that we want to debug—for the purpose of this demo I will be using a new “password” program.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">cd</span> ~/cs50/password
+<span class="gp">$ </span>make
+</code></pre>
+</div>
+
+<p>** Get the example code here: 
+<code class="highlighter-rouge">
+cp -r ~cs50/public_html/examples/password .
+</code></p>
+
+<p>The program is simple: “password” simulates a program that prompts the user to enter their password. If the user’s “guess” matches the password, then the user is “authenticated” (i.e., they get the nice “success” message). If the user fails to enter the correct password, they will be prompted again. The user is only allowed 3 guesses before the program terminates.</p>
+
+<p>I tried the program once where I entered the correct password (which is currently hardcoded into the program) and successfully “authenticated.” I also tried the program on some reasonable “guess” passwords and I wasn’t able to authenticate.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ./password
+password: cs50
+success!
+
+$ ./password
+password: password
+incorrect. try again. (attempt 1)
+password: dartmouth
+incorrect. try again. (attempt 2)
+password: passwd
+incorrect. try again. (attempt 3)
+you've exceeded the max. number of attempts. try again later.
+</code></pre>
+</div>
+
+<p>So I’m good, right?!</p>
+
+<p>Well, except for this weird thing I encountered. I thought I’d test the program with a few more passwords that that I thought of:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ./password
+password:
+incorrect. try again. (attempt 1)
+password: 2345
+incorrect. try again. (attempt 2)
+password: abcdefghijklmn
+success!
+</code></pre>
+</div>
+
+<p>WHAT?! Success? Really?</p>
+
+<p>OK, let’s poke at this a little more:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ./password
+password: abcdefghijklmnopqrstuvwxyz
+Segmentation fault (core dumped)
+</code></pre>
+</div>
+
+<p>Uh oh. The dreaded segfault. OK, I need to investigate more. Clearly something funny happens when I start entering long passwords (that or this program really doesn’t like the alphabet…). Since the weird behavior I’m noticing seems to be related to reading/checking passwords that are entered, I’ll start my investigation of the code there.</p>
+
+<p>Let’s try running our program in that cool debugging tool, <code class="highlighter-rouge">gdb</code>. When <code class="highlighter-rouge">gdb</code> starts up it prints out a bunch of information about its version and license, then drops into the <code class="highlighter-rouge">gdb</code> “shell.”</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ gdb password
+GNU gdb (GDB) Fedora 7.10.1-31.fc23
+Copyright (C) 2015 Free Software Foundation, Inc.
+...(snipped)...
+Reading symbols from password...done.
+(gdb)
+</code></pre>
+</div>
+
+<p>One of the powerful features that a debugger offers us is the ability to set “breakpoints” in our code; when we run our program and the debugger encounters a breakpoint that we previously set, the execution of the program stops at that point. Let’s set a few breakpoints:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) break main
+Breakpoint 1 at 0x400805: file password.c, line 22.
+(gdb) break check_password
+Breakpoint 2 at 0x4008b4: file password.c, line 57.
+(gdb) break 36
+Breakpoint 3 at 0x40086a: file password.c, line 36.
+(gdb) info break
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x0000000000400805 in main at password.c:22
+2       breakpoint     keep y   0x00000000004008b4 in check_password at password.c:57
+3       breakpoint     keep y   0x000000000040086a in main at password.c:36
+</code></pre>
+</div>
+
+<p>Hopefully you caught that: notice that we can set breakpoints by identifying the name of a function (e.g., “main” and “check_password”), or by specifying a particular line in our source code (e.g., line 36). There are other identifiers that can be used to enable breakpoints (e.g., by memory address) but we will leave you to explore those later. When you are debugging programs with multiple files you can also set breakpoints in different files by specifying the file as well as the function name/line of code where you’d like to enable a breakpoint. Again, we will get familiar with the basics here and you can go explore some of the other cool <code class="highlighter-rouge">gdb</code> features later. Anytime you want to see the breakpoints you’ve currently created, run <code class="highlighter-rouge">info break</code> (as shown above). You can also clear all of your breakpoints (<code class="highlighter-rouge">clear</code>), clear specific breakpoints (<code class="highlighter-rouge">clear function</code> or <code class="highlighter-rouge">clear line</code>), or even enable/disable breakpoints so that you can leave them in place, but control whether the cause your program to stop when the breakpoint is encountered. Let’s disable all of our breakpoints except for the one we set at the <code class="highlighter-rouge">check_password</code> function:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) disable 1 3
+(gdb) info break
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep n   0x0000000000400805 in main at password.c:22
+2       breakpoint     keep y   0x00000000004008b4 in check_password at password.c:57
+3       breakpoint     keep n   0x000000000040086a in main at password.c:36
+</code></pre>
+</div>
+
+<p>At this point we’ve started <code class="highlighter-rouge">gdb</code> and told it about some breakpoints we want set, but we haven’t actually started running our program. Let’s run our program now:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) run
+Starting program: /net/grad/traviswp/cs50-live/password/password
+
+Breakpoint 2, check_password () at password.c:57
+57	    int authenticated = 0;       // "flag" that determines if the user successfully authenticated.
+</code></pre>
+</div>
+
+<p>Just as we hoped (expected), the debugger started our program running but “paused” the program as soon as it hit the breakpoint that we set at the <code class="highlighter-rouge">check_password</code> function. Once the program has stopped we can “poke around” a bit.</p>
+
+<p>Now let’s <code class="highlighter-rouge">step</code> one line of code at a time:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) step
+60	    printf("password: ");
+(gdb) step
+__printf (format=0x400a9f "password: ") at printf.c:28
+28	{
+(gdb) step
+32	  va_start (arg, format);
+</code></pre>
+</div>
+
+<p>Oops! Stepping line by line is nice but <code class="highlighter-rouge">gdb</code>’s <code class="highlighter-rouge">step</code> command allowed us to walk right down into the icky details of <code class="highlighter-rouge">printf</code>! This is  pretty cool that we can “step” into functions but <code class="highlighter-rouge">printf</code> does a lot of work that we aren’t interested in right now. If you find yourself deep down in some function that you accidentally stepped into, use the <code class="highlighter-rouge">finish</code> command to start the program running again until just after the function in the current stack frame returns.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) finish
+Run till exit from #0  __printf (format=0x400a9f "password: ") at printf.c:32
+check_password () at password.c:61
+61	    if (fgets(guess, 50, stdin) == NULL)
+Value returned is $1 = 10
+</code></pre>
+</div>
+
+<p>Now that we are back up in our <code class="highlighter-rouge">check_password</code> function we can proceed. To avoid stepping <em>into</em> functions we can use the alternative <code class="highlighter-rouge">gdb</code> command called <code class="highlighter-rouge">next</code> which is similar to <code class="highlighter-rouge">step</code> in that it executes one line of code and then pauses at the next line of code, however <code class="highlighter-rouge">next</code> will step <em>over</em> functions so that we don’t end up deep down in some code that isn’t relevant to us (i.e., deep inside of the details of <code class="highlighter-rouge">printf</code>); let’s try that now:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) next
+password: password
+65	    if (strlen(guess) == 0)
+(gdb) next
+71	    if (guess[strlen(guess)-1] != '\n') {
+(gdb) next
+78	        guess[strlen(guess)-1] = 0;
+(gdb) next
+82	    if (strcmp(PASSWORD, guess) == 0)
+(gdb) next
+85	    return authenticated;
+</code></pre>
+</div>
+
+<p>When we were using <code class="highlighter-rouge">next</code> (above) we finally got the prompt to enter a password—I decided to try one of the most popular passwords out there: “password” :).</p>
+
+<p>Before we go any further, let’s look at some of the local variables. We can use the <code class="highlighter-rouge">print</code> command to display the value of some expression (e.g., variable name).</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) print authenticated
+$2 = 0
+(gdb) print guess
+$3 = "password\000"
+</code></pre>
+</div>
+
+<p>We can even evaluate C code!</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) print strlen(guess)
+$4 = 8
+</code></pre>
+</div>
+
+<p>Or use C’s “address of” operator to learn about where some of our variables live in memory. Keep in mind that these variables live on the “stack” and are local variables that only exist within the <code class="highlighter-rouge">check_password</code> function.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) print &amp;authenticated
+$5 = (int *) 0x7fffffffdf8c
+(gdb) print &amp;guess
+$6 = (char (*)[10]) 0x7fffffffdf80
+</code></pre>
+</div>
+
+<p>Pretty cool, right? Notice that <code class="highlighter-rouge">gdb</code> is nice enough to also give us information about the <em>type</em> of the thing that we are looking at!</p>
+
+<p>Let’s run <code class="highlighter-rouge">next</code> until we are done in <code class="highlighter-rouge">check_password</code>. Once we return from <code class="highlighter-rouge">check_password</code> we are returned to <code class="highlighter-rouge">main</code> at the point in the code just after where we called <code class="highlighter-rouge">check_password</code>. I kind of forget where we are in the code so I’m going to use the <code class="highlighter-rouge">list</code> command to dump out some of the source code around where I am currently stopped in the program’s execution. By default, <code class="highlighter-rouge">list</code> will show us 10 lines of code where our current line is “centered” in the output.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) next
+86	}
+(gdb) next
+main (argc=1, argv=0x7fffffffe0a8) at password.c:38
+38	        n_guesses++;
+(gdb) list
+33
+34	    // get password and check if user authenticated
+35	    int result;
+36	    while (n_guesses &lt; MAX_NUM_GUESSES) {
+37	        result = check_password();
+38	        n_guesses++;
+39	        if (result)
+40	            break;
+41	        else
+42	            printf("(%d) incorrect. try again. (attempt %d)\n", result, n_guesses);
+</code></pre>
+</div>
+
+<p>Back to stepping and checking some variables…and trying another password…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) step
+39	        if (result)
+(gdb) step
+42	            printf("(%d) incorrect. try again. (attempt %d)\n", result, n_guesses);
+(gdb) step
+__printf (format=0x400a28 "(%d) incorrect. try again. (attempt %d)\n") at printf.c:28
+28	{
+(gdb) finish
+Run till exit from #0  __printf (format=0x400a28 "(%d) incorrect. try again. (attempt %d)\n") at printf.c:28
+(0) incorrect. try again. (attempt 1)
+main (argc=1, argv=0x7fffffffe0a8) at password.c:36
+36	    while (n_guesses &lt; MAX_NUM_GUESSES) {
+Value returned is $7 = 38
+(gdb) next
+37	        result = check_password();
+(gdb) next
+
+Breakpoint 2, check_password () at password.c:57
+57	    int authenticated = 0;       // "flag" that determines if the user successfully authenticated.
+(gdb) next
+60	    printf("password: ");
+(gdb) next
+61	    if (fgets(guess, 50, stdin) == NULL)
+(gdb) next
+password: password2
+65	    if (strlen(guess) == 0)
+(gdb) print guess
+$8 = "password2\n"
+(gdb) print authenticated
+$9 = 0
+</code></pre>
+</div>
+
+<p>OK, I’m getting tired of stepping. Rather than stepping line by line, I want to start the program running again (at least until it hits the breakpoint again) so that I can speed up the process getting back to the code where I can enter a password and verify the changes. To do this I can simply use the <code class="highlighter-rouge">continue</code> command which will continue the execution of the program until it is stopped again for some reason.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) continue
+Continuing.
+(0) incorrect. try again. (attempt 2)
+
+Breakpoint 2, check_password () at password.c:57
+57	    int authenticated = 0;       // "flag" that determines if the user successfully authenticated.
+(gdb) next
+60	    printf("password: ");
+(gdb)
+61	    if (fgets(guess, 50, stdin) == NULL)
+(gdb)
+password: password1234
+65	    if (strlen(guess) == 0)
+(gdb) c
+Continuing.
+(0) incorrect. try again. (attempt 3)
+you've exceeded the max. number of attempts. try again later.
+[Inferior 1 (process 16748) exited with code 02]
+</code></pre>
+</div>
+
+<p>It looks like we got booted from the program because we exceeded the maximum number of attempts that it will allow.</p>
+
+<p>At this point we’ve seen some useful <code class="highlighter-rouge">gdb</code> commands and you are now equipped to do some debugging on your own. Keep poking at the program and see if you can find the error that allows people to authenticate in cases where they really shouldn’t be allowed to do so. If you need a push in the right direction, check out this <a href="passwordhint.html">hint</a>. If you really can’t figure it out after trying to use <code class="highlighter-rouge">gdb</code>, you can also check out <a href="passwordsolution.html">a brief discussion</a> for the solution to the bug—only do this if you’ve <em>really</em> given it the ol’ college try though :)</p>
+
+<p><strong>A couple of cool things to note about <code class="highlighter-rouge">gdb</code> at this point:</strong></p>
+
+<ul>
+  <li>Everytime you enter a command at the <code class="highlighter-rouge">gdb</code> “shell” that is successful, the output value is stored in a variable denoted <code class="highlighter-rouge">$N</code> where <code class="highlighter-rouge">N</code> increments by 1 for each command that you run. You can use those variables at a later point if you want (e.g., <code class="highlighter-rouge">print $3</code>).</li>
+  <li><code class="highlighter-rouge">gdb</code> supports auto-completion on function names and variable names! Go ahead and try it out!</li>
+  <li>Also similar to the regular shell, the <code class="highlighter-rouge">gdb</code> shell allows you to arrow up/down to revisit past commands.</li>
+  <li>Many of the <code class="highlighter-rouge">gdb</code> commands have abbreviated forms (e.g., <code class="highlighter-rouge">run</code>=&gt;<code class="highlighter-rouge">r</code>, <code class="highlighter-rouge">continue</code>=&gt;<code class="highlighter-rouge">c</code>, <code class="highlighter-rouge">next</code>=&gt;<code class="highlighter-rouge">n</code>, <code class="highlighter-rouge">backtrace</code>=&gt;<code class="highlighter-rouge">bt</code>); see the <a href="http://users.ece.utexas.edu/~adnan/gdb-refcard.pdf">gdb quick reference guide</a> to see other commands that have abbreviated forms.</li>
+  <li>You can actually re-run the previous command simply by hitting <code class="highlighter-rouge">&lt;enter&gt;</code>.</li>
+</ul>
+
+<h3 id="frequently-used-gdb-commands">Frequently used <code class="highlighter-rouge">gdb</code> commands</h3>
+
+<p>Below are some of the more common <code class="highlighter-rouge">gdb</code> commands that you will need. See also this printable <a href="http://users.ece.utexas.edu/~adnan/gdb-refcard.pdf">gdb quick reference guide</a>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">command</th>
+      <th style="text-align: left">purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">run [arglist]</code></td>
+      <td style="text-align: left">Start your program (with arglist, if specified).</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">break [file:]function</code></td>
+      <td style="text-align: left">Set a breakpoint at function (in file).</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">list [file:]function</code></td>
+      <td style="text-align: left">Type  the  text  of  the  program  in  the  vicinity of where it is presently stopped.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">backtrace</code></td>
+      <td style="text-align: left">Backtrace: display the program stack.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">frame [args]</code></td>
+      <td style="text-align: left">The frame command allows you to move from one stack frame to another, and to print the stack frame you select. args may be either the address of the frame or the stack frame number. Without an argument, frame prints the current stack frame.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">print expr</code></td>
+      <td style="text-align: left">Display the value of an expression.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">continue</code></td>
+      <td style="text-align: left">Continue running your program (after stopping, e.g. at a breakpoint).</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">next</code></td>
+      <td style="text-align: left">Execute next program line (after stopping); step over any function calls  in the line.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">step</code></td>
+      <td style="text-align: left">Execute next program line (after stopping); step into any function  calls  in the line.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">help [name]</code></td>
+      <td style="text-align: left">Show information about GDB command name, or general information about using GDB.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">quit</code></td>
+      <td style="text-align: left">Exit from GDB.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="valgrind-a-memory-management-profiling-tool">Valgrind: a memory management profiling tool</h2>
+
+<p>The <code class="highlighter-rouge">valgrind</code> tool is excellent for finding a number of problems, specifically issues in programs that involve illegal memory access and memory leaks. Be sure to read this excellent brief tutorial from Stanford’s CS107 class: <a href="https://web.stanford.edu/class/cs107/guide_valgrind.html">Guide to Valgrind</a> (some of the notes below are adapted from this guide).</p>
+
+<p>Running a program under <code class="highlighter-rouge">valgrind</code> results in extensive checking of memory allocations and accesses and it provides a report with detailed information about the context and circumstances of each error. The output report can be quite verbose and a little difficult to use to improve your program’s usage of memory if you don’t know what you are looking for; therefore one of our objectives here is to look at a couple of examples and start to get a handle on how to read and interpret <code class="highlighter-rouge">valgrind</code>’s output.</p>
+
+<p><strong>=&gt; The Goal of a Programmer:</strong> A clean report from <code class="highlighter-rouge">valgrind</code> that indicates “no errors and no leaks.”</p>
+
+<p>As far as you are concerned when using <code class="highlighter-rouge">valgrind</code>, there are two general types of feedback you will get regarding your program’s usage of memory. We will look at these next.</p>
+
+<h3 id="memory-errors">Memory errors</h3>
+
+<p>The really obvious and bad memory errors will crash your program outright (e.g., accessing memory that is outside of your program’s allocated memory). The not so obvious memory related errors may “get lucky” most of the time (i.e., touch valid memory), but every once in a while the luck runs out and your program, somewhat mysteriously, fails. Running <code class="highlighter-rouge">valgrind</code> on your program can give you insightful information on both of these sorts of errors.</p>
+
+<p>When an error is detected by <code class="highlighter-rouge">valgrind</code> you should see some output that includes some sort of error description, the offending source code (line), and a little bit of information about the actual memory and what may be going wrong. There are a few different types of memory errors that you may see such as:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Invalid read/write of size X</code></li>
+  <li><code class="highlighter-rouge">Use of uninitialized value</code> or <code class="highlighter-rouge">Conditional jump or move depends on unitialized value(s)</code></li>
+  <li><code class="highlighter-rouge">Source and destination overlap in memcpy()</code></li>
+  <li><code class="highlighter-rouge">Invalid free()</code></li>
+</ul>
+
+<h3 id="memory-leaks">Memory “leaks”</h3>
+
+<p>When you allocate memory (e.g., <code class="highlighter-rouge">malloc</code>) but fail to properly <code class="highlighter-rouge">free</code> that memory when it is no longer needed, this leads to what is known as a <em>memory leak</em>.</p>
+
+<p>As we’ve seen in class, memory leaks in small, short-lived programs that exit fairly quickly don’t cause any noticable issues. In larger projects that operate on lots of data and/or those that are intended to run for a long time (e.g., webservers), memory leaks can add up quickly and cause your program to fail.</p>
+
+<p>Valgrind allows you to check your programs (e.g., <code class="highlighter-rouge">prog</code>) for memory leaks and to get the best feedback you’ll want to specify some additional flags:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>valgrind --leak-check<span class="o">=</span>full --show-leak-kinds<span class="o">=</span>all ./prog <span class="o">[</span>ARGS]
+</code></pre>
+</div>
+
+<p>The easiest way to determine if there is some sort of memory leak is to check the alloc/free counts generated in the <code class="highlighter-rouge">valgrind</code> output. Ideally, the counts should match. If they don’t you’ll get a “LEAK SUMMARY” at the end of the report as well as a little bit of information from <code class="highlighter-rouge">valgrind</code> regarding each of the detected memory leaks (e.g., how many bytes were leaked, where in the code the allocation happened).</p>
+
+<p>When profiling your program, <code class="highlighter-rouge">valgrind</code> will attempt to categorize any memory leaks into one of four categories: <strong>(1) definitely lost:</strong> memory that was allocated from the heap but not properly freed, and there is no longer a pointer to the data; <strong>(2) indirectly lost:</strong> memory allocated from the heap that was indirectly lost due to “losing” a pointer that provided access to other heap-allocated memory; <strong>(3) possibly lost:</strong> memory that was allocated from the heap but not properly freed—<code class="highlighter-rouge">valgrind</code> can’t determine whether or not there is a pointer to the memory; <strong>(4) still reachable:</strong> memory that was allocated from the heap but not properly freed, but the program still retains a pointer to the memory in some way. Regardless of the category, these are all considered memory leaks and should be fixed!</p>
+
+<h3 id="valgrind-demos">Valgrind Demos</h3>
+
+<h2 id="try-it">Try it!</h2>
+
+<p>At the end of the day <code class="highlighter-rouge">gdb</code> and <code class="highlighter-rouge">valgrind</code> are tools that you can choose to use or not (though your grader will likely use both to explore the correctness of your programs so you should too!). Reading about great tools is one thing, but really learning how to use a tool comes from… using a tool! Below are some instructions to get you setup with a few programs that have some bugs—some obvious, and some not so obvious—and your goal is to find those bugs and squash ‘em using <code class="highlighter-rouge">gdb</code> and/or <code class="highlighter-rouge">valgrind</code>. Good luck!</p>
+
+<h2 id="extras">Extras</h2>
+
+<h3 id="code-inspections">Code Inspections</h3>
+
+<p>Many times people rush and “hack” the debug phase and sit and the terminal hoping to eventually track down that bug via trial and error. Most people do this as their first resort. You will find this approach can be successful but it can be very time consuming - put more plainly, it will take longer than other techniques.</p>
+
+<p>One of the most effective debug tools is you! Stop and read your code. Pretend you are a computer and execute the code with a pen and paper. As you read your code, keep some of the following tips in mind:</p>
+
+<ul>
+  <li>Draw diagrams! Especially for data structures.</li>
+  <li>Regarding for loops, and recursion, think about the base case, and the boundary conditions, and work inductively toward the general case. Errors most often occur at the base case or at the boundary cases.</li>
+</ul>
+
+<p>Code inspection is very useful. Good programmers closely trace through their code in detail. Look for boundary problems in code, many times bugs exist at the boundaries - of structures, arrays, code (e.g., for loops), and, most of all, data. Many difficult bugs require more power than just hacking and hoping. Once you have read your code and convinced yourself it works then bugs remain you need to instrument your code and start the detective work.</p>
+
+<p>Sometimes while debugging you will discover other, unrelated bugs that haven’t yet manifested themselves. FIX THEM!</p>
+
+<p>Pragmatic Programmer Tip :
+&gt; <strong>Don’t live with broken windows</strong>
+&gt;  Fix bad designs, wrong decisions, and poor code
+&gt;  when you see them.</p>
+
+<p>Pragmatic Programmer Tip :
+&gt; <strong>Fix the Problem, Not the Blame</strong>
+&gt;  It doesn’t really matter whether the bug is your fault or someone else’s—it is still your problem,
+&gt;  and it still needs to be fixed.</p>
+
+<h3 id="using-gdb-to-debug-core-files">Using gdb to debug “core” files</h3>
+
+<p>Earlier it was said that you can start gdb with no arguments or with the name of an exectuable as an argument. You can also start with both an executable program and a core file specified:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>gdb program core
+</code></pre>
+</div>
+
+<p><strong>Important:</strong> Linux has recently changed the way core dumps are produced.  Traditionally, when your program crashed with a ‘segmentation fault’ or certain other errors, Unix would “dump core”.  That is, it wrote a snapshot copy of the process’s memory into a file called <code class="highlighter-rouge">core</code> in the current working directory.  These files are huge.  Programmers (or users) often don’t notice them, and the file system becomes littered with droppings.  <em>Huge</em> droppings.  So Linux now dumps core files in a central location, where they can be managed, and cleaned up.  To find your core files, type</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>coredumpctl list
+</code></pre>
+</div>
+
+<p>And to use one of those core files with gdb, say, the one associated with dead process 20421,</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>coredumpctl gdb 20421
+</code></pre>
+</div>
+
+<p>For more information, read the department’s wiki <a href="https://wiki.cs.dartmouth.edu/faq/doku.php/users_faq:coredump">page about core dumps</a>.</p>
+
+<p>In this class it is usually sufficient to debug the program directly and you really shouldn’t need to concern yourself with debugging <code class="highlighter-rouge">core</code> files directly. There are advantages to debugging a <code class="highlighter-rouge">core</code> file, however, it generally captures state such as the values of the processor registers at the time of the core dump, information about the processor, flags that are set in your OS (i.e., OS configurations), and so forth.</p>
+
+<h3 id="the-gprof-tool">The <code class="highlighter-rouge">gprof</code> Tool</h3>
+
+<p>The <code class="highlighter-rouge">gprof</code> tool is used to profile the runtime performance of code. Many times you might be confident that the code is bug free because there are no functional problems. However, the code could be worthless if it does not meet its performance requirements. The <code class="highlighter-rouge">gprof</code> tool is an execution profiling tool that is useful when tracking down performance problems.</p>
+
+<p><strong>Warning.</strong> <code class="highlighter-rouge">gprof</code> doesn’t always work well on MacOS. Log on to a machine in the lab to try it out.</p>
+
+<p>Anecdotal evidence. Many time programmers focus on getting the code to work functionally and then think about speed up. This is not always the most productive approach to design or systems development. Best to design for speed if needed (e.g., use a hash table instead of searching a long double linked list).</p>
+
+<blockquote>
+  <p><strong>An Anecdote from Andrew Campbell:</strong>
+I recall once working as a consultant on improving the performance of a radio router. The performance of the system coded in Ada was appalling and someone`s head was about to roll. I spend probably two weeks just studying the code of a very large system - difficult to keep that all in your head. Profiling the code highlighted the cost of a system that had been desiged and coded with an excessive number of tasks and rendezvous. The cost of interprocess communications was high. What did I do? It was not nice. Turned the system into one large task and replaced all interprocess communications (IPC) (which represented system calls) with my library that implemented the IPC API. I changed a couple 100 lines of code in a system of 20,000 lines of code. The improvement was massive. Packets could be forwarded from one radio input to the output radio in under 100 msec which was down from 1 second! I was king for the day, or week. I made my changes, tested them locally, desk checked the code closely - and, it ran first time! The guy who designed the system wanted me to fail - I could feel it. But when that router ran first time, well, that is a moment I will always remember. My reward? I got to design the next system. The problem was essentially a performance bug. The changes were simple once the problem was identified. I took a very radical approach that ran against OO design. But that is what was needed. A router that forwarded packets at 1 second intervals was not going to fly with the customer.</p>
+</blockquote>
+
+<p>To run the <code class="highlighter-rouge">gprof</code> tool, first use the <code class="highlighter-rouge">-pg</code> switch in the compiler flags:</p>
+
+<div class="language-makefile highlighter-rouge"><pre class="highlight"><code><span class="c"># Filename: Makefile
+# Description: The make file is to build up the crawler.
+</span>
+<span class="nv">CC</span><span class="o">=</span>gcc
+<span class="nv">CFLAGS</span><span class="o">=</span>-Wall -pg -pedantic -std<span class="o">=</span>c11
+<span class="nv">SOURCES</span><span class="o">=</span>./list.h ./list.c ./crawler.c ../util/hash.c ../util/html.c
+</code></pre>
+</div>
+
+<p>Once you have done a build with <code class="highlighter-rouge">-pg</code> then run the application.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">pwd</span>
+/net/nusers/campbell/cs50/l16/lab4/src/crawler
+
+<span class="gp">$ </span>./crawler www.cs.dartmouth.edu ../../data/ 2
+</code></pre>
+</div>
+
+<p>Now you are ready to run the <code class="highlighter-rouge">gprof</code> tool:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>gprof crawler gmon.out &gt; profile
+</code></pre>
+</div>
+
+<p>An excerpt from the output of the profile is below. You can learn a lot about where your program is spending time by studying this output. There is a reasonable amount of documentation included in the report which will help the interested person navigate the report’s output, and there’s also lots more in the <code class="highlighter-rouge">man</code> pages.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>    Flat profile:
+
+    Each sample counts as 0.01 seconds.
+      %   cumulative   self              self     total
+     <span class="nb">time   </span>seconds   seconds    calls  us/call  us/call  name
+     35.75      0.05     0.05      203   246.54   246.54  removeWhiteSpace
+     14.30      0.07     0.02    43714     0.46     0.46  hash1
+     14.30      0.09     0.02    22186     0.90     3.16  GetNextURL
+      7.15      0.10     0.01    21533     0.46     0.46  NormalizeURL
+      7.15      0.11     0.01     1351     7.41     7.94  DAdd
+      7.15      0.12     0.01     1351     7.41     7.41  getAddressFromTheLinksToBeVisited
+      7.15      0.13     0.01      203    49.31   394.47  extractURLs
+      7.15      0.14     0.01      203    49.31   237.36  updateListLinkToBeVisited
+      0.00      0.14     0.00    43714     0.00     0.46  make_hash
+      0.00      0.14     0.00    21147     0.00     0.91  GetDataWithKey
+      0.00      0.14     0.00    19795     0.00     1.45  addElement
+      0.00      0.14     0.00     1351     0.00     1.38  setURLasVisited
+      0.00      0.14     0.00      208     0.00     0.00  getPage
+      0.00      0.14     0.00      203     0.00     0.00  ReadFileToMemoryOrDie
+      0.00      0.14     0.00      203     0.00     0.00  file_length
+      0.00      0.14     0.00        1     0.00     0.00  CleanDictionary
+      0.00      0.14     0.00        1     0.00     0.00  InitDictionary
+      0.00      0.14     0.00        1     0.00     0.00  IsDirectory
+      0.00      0.14     0.00        1     0.00     0.00  cleanup
+      0.00      0.14     0.00        1     0.00     0.00  initList
+
+     %         the percentage of the total running <span class="nb">time </span>of the
+    <span class="nb">time       </span>program used by this <span class="k">function</span>.
+
+    cumulative a running sum of the number of seconds accounted
+     seconds   <span class="k">for </span>by this <span class="k">function </span>and those listed above it.
+
+     self      the number of seconds accounted <span class="k">for </span>by this
+    seconds    <span class="k">function </span>alone.  This is the major sort <span class="k">for </span>this
+               listing.
+
+    calls      the number of <span class="nb">times </span>this <span class="k">function </span>was invoked, <span class="k">if
+               </span>this <span class="k">function </span>is profiled, <span class="k">else </span>blank.
+
+     self      the average number of milliseconds spent <span class="k">in </span>this
+    ms/call    <span class="k">function </span>per call, <span class="k">if </span>this <span class="k">function </span>is profiled,
+               <span class="k">else </span>blank.
+
+     total     the average number of milliseconds spent <span class="k">in </span>this
+    ms/call    <span class="k">function </span>and its descendents per call, <span class="k">if </span>this
+               <span class="k">function </span>is profiled, <span class="k">else </span>blank.
+
+    name       the name of the <span class="k">function</span>.  This is the minor sort
+               <span class="k">for </span>this listing. The index shows the location of
+               the <span class="k">function in </span>the gprof listing. If the index is
+               <span class="k">in </span>parenthesis it shows where it would appear <span class="k">in
+               </span>the gprof listing <span class="k">if </span>it were to be printed.
+    ^L
+                         Call graph <span class="o">(</span>explanation follows<span class="o">)</span>
+
+
+    granularity: each sample hit covers 2 byte<span class="o">(</span>s<span class="o">)</span> <span class="k">for </span>7.14% of 0.14 seconds
+
+    index % <span class="nb">time    </span>self  children    called     name
+                                                     
+    <span class="o">[</span>1]    100.0    0.00    0.14                 main <span class="o">[</span>1]
+                    0.01    0.07     203/203         extractURLs <span class="o">[</span>2]
+                    0.01    0.04     203/203         updateListLinkToBeVisited <span class="o">[</span>5]
+                    0.01    0.00    1351/1351        getAddressFromTheLinksToBeVisited <span class="o">[</span>12]
+                    0.00    0.00    1351/1351        setURLasVisited <span class="o">[</span>13]
+                    0.00    0.00     208/208         getPage <span class="o">[</span>14]
+                    0.00    0.00       1/1           IsDirectory <span class="o">[</span>19]
+                    0.00    0.00       1/1           initList <span class="o">[</span>21]
+                    0.00    0.00       1/1           cleanup <span class="o">[</span>20]
+    -----------------------------------------------
+                    0.01    0.07     203/203         main <span class="o">[</span>1]
+    <span class="o">[</span>2]     57.1    0.01    0.07     203         extractURLs <span class="o">[</span>2]
+                    0.02    0.05   22186/22186       GetNextURL <span class="o">[</span>3]
+    -----------------------------------------------
+    -----------------------------------------------
+                                    1676             GetNextURL <span class="o">[</span>3]
+                    0.02    0.05   22186/22186       extractURLs <span class="o">[</span>2]
+    <span class="o">[</span>3]     50.0    0.02    0.05   22186+1676    GetNextURL <span class="o">[</span>3]
+                    0.05    0.00     203/203         removeWhiteSpace <span class="o">[</span>4]
+                                    1676             GetNextURL <span class="o">[</span>3]
+    -----------------------------------------------
+                    0.05    0.00     203/203         GetNextURL <span class="o">[</span>3]
+    <span class="o">[</span>4]     35.7    0.05    0.00     203         removeWhiteSpace <span class="o">[</span>4]
+    -----------------------------------------------
+                    0.01    0.04     203/203         main <span class="o">[</span>1]
+    <span class="o">[</span>5]     34.4    0.01    0.04     203         updateListLinkToBeVisited <span class="o">[</span>5]
+                    0.00    0.03   19794/19795       addElement <span class="o">[</span>6]
+                    0.01    0.00   20182/21533       NormalizeURL <span class="o">[</span>11]
+    -----------------------------------------------
+                    0.00    0.00       1/19795       setURLasVisited <span class="o">[</span>13]
+                    0.00    0.03   19794/19795       updateListLinkToBeVisited <span class="o">[</span>5]
+    <span class="o">[</span>6]     20.5    0.00    0.03   19795         addElement <span class="o">[</span>6]
+                    0.00    0.02   19795/21147       GetDataWithKey <span class="o">[</span>9]
+                    0.01    0.00    1351/1351        DAdd <span class="o">[</span>10]
+    -----------------------------------------------
+                    0.02    0.00   43714/43714       make_hash <span class="o">[</span>8]
+    <span class="o">[</span>7]     14.3    0.02    0.00   43714         hash1 <span class="o">[</span>7]
+    -----------------------------------------------
+
+    ... 152 lines omitted
+</code></pre>
+</div>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

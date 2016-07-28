@@ -1,0 +1,365 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/16-crawler.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lecture 16 - TSE Crawler design and implementation</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/16-crawler.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lecture 16 - TSE Crawler design and implementation</h1>
+  </header>
+
+  <div class="post-content">
+    <h3 id="crawler-execution-and-output">Crawler execution and output</h3>
+
+<p>Below is a snippet of when the program starts to crawl the CS50 website to a depth of 1. The crawler prints status information as it goes along.  <em>Note, you might consider covering this code in <code class="highlighter-rouge">#ifdef</code> block that can be triggered by a compile-time switch.</em>  See <a href="08-preprocessorpointers.html.html">Lecture 08</a> about this trick.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html data 1
+ 0   Fetched: http://old-www.cs.dartmouth.edu/~cs50/index.html
+ 0     Saved: http://old-www.cs.dartmouth.edu/~cs50/index.html
+ 0  Scanning: http://old-www.cs.dartmouth.edu/~cs50/index.html
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/
+ 0     Found: https://canvas.dartmouth.edu/courses/15260
+ 0  IgnExtrn: https://canvas.dartmouth.edu/courses/15260
+ 0     Found: https://piazza.com/dartmouth/summer2016/cs50/home
+ 0  IgnExtrn: https://piazza.com/dartmouth/summer2016/cs50/home
+ 0     Found: https://gitlab.cs.dartmouth.edu
+ 0  IgnExtrn: https://gitlab.cs.dartmouth.edu
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Schedule.pdf
+ 0  IgnExtrn: http://old-www.cs.dartmouth.edu/~cs50/Schedule.pdf
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Lectures/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/Lectures/
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Reading/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/Reading/
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/examples/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/examples/
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Logistics/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/Logistics/
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Resources/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/Resources/
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Labs/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/Labs/
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Project/
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/Project/
+ 0     Found: http://tools.ietf.org/html/rfc1983
+ 0  IgnExtrn: http://tools.ietf.org/html/rfc1983
+ 0     Found: http://www.cs.dartmouth.edu/~ccpalmer/classes/cs55/Content/Purpose.html
+ 0  IgnExtrn: http://www.cs.dartmouth.edu/~ccpalmer/classes/cs55/Content/Purpose.html
+ 0     Found: http://old-www.cs.dartmouth.edu/~cs50/Labs/Lab0-Preliminaries.html
+ 0     Added: http://old-www.cs.dartmouth.edu/~cs50/Labs/Lab0-Preliminaries.html
+ 0     Found: http://old-www.cs.dartmouth.edu/~xia/
+ 0     Added: http://old-www.cs.dartmouth.edu/~xia/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~xia/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~xia/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/Labs/Lab0-Preliminaries.html
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/Labs/Lab0-Preliminaries.html
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/Project/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/Project/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/Labs/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/Labs/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/Resources/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/Resources/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/Logistics/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/Logistics/
+ 1     FAILED: http://old-www.cs.dartmouth.edu/~cs50/examples/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/Reading/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/Reading/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/Lectures/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/Lectures/
+ 1    Fetched: http://old-www.cs.dartmouth.edu/~cs50/
+ 1      Saved: http://old-www.cs.dartmouth.edu/~cs50/
+crawler: 33 malloc, 33 free, 0 free(NULL), 0 net
+</code></pre>
+</div>
+
+<p>Notice how I printed the depth of the current crawl at left, then indented slightly based on the current depth, then printed a single word meant to indicate what is being done, then printed the URL.  By ensuring a consistent format, and choosing a simple/unique word for each type of line, I can post-process the output with <code class="highlighter-rouge">grep</code>, <code class="highlighter-rouge">awk</code>, and so forth, enabling me to run various checks on the output of my crawler.  Much better than a mish-mash of arbitrary output formats!</p>
+
+<p>To make this easy, here’s a simple function to print those lines:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="c1">// log one word (1-9 chars) about a given url
+</span><span class="kr">inline</span> <span class="k">static</span> <span class="kt">void</span> <span class="nf">logr</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">word</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">depth</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%2d %*s%9s: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="s">""</span><span class="p">,</span> <span class="n">word</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>We thus have just one <code class="highlighter-rouge">printf</code> call, and if we want to tweak the format, we just need to edit one place and not every log-type <code class="highlighter-rouge">printf</code> in the code.</p>
+
+<blockquote>
+  <p>Notice the <code class="highlighter-rouge">inline</code> modifier. This means that C is allowed to compile this code ‘in line’ where the function call occurs, rather than compiling code that actually jumps to a function and returns.  Syntactically, in every way, it’s just like a function - but more efficient.  Great for tiny functions like this one, where it’s worth duplicating the code (making the executable bigger) to save time (making the program run slightly faster).</p>
+</blockquote>
+
+<p>Anyway, at strategic points in my code, I make a call like this one:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>   <span class="n">logr</span><span class="p">(</span><span class="s">"Fetched"</span><span class="p">,</span> <span class="n">page</span><span class="o">-&gt;</span><span class="n">depth</span><span class="p">,</span> <span class="n">page</span><span class="o">-&gt;</span><span class="n">url</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<h3 id="contents-of-pagedirectory-after-crawler-has-run">Contents of pageDirectory after crawler has run</h3>
+
+<p>For each URL crawled the program creates a file and places in the file the URL and filename followed by all the contents of the webpage. But for a maxWebPageDepth = 1 as in this example there are only a few webpages crawled and files created.  Below is a peek at the files created during the above crawl.  Notice how each page starts with the URL, then a number (the depth of that page during the crawl), then the contents of the page (here I printed only the first line of the content).</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ls data
+1	2	3	4	5	6	7	8	9
+$ head -3 data/1
+http://old-www.cs.dartmouth.edu/~cs50/index.html
+0
+&lt;!DOCTYPE html&gt;
+$ head -3 data/2
+http://old-www.cs.dartmouth.edu/~dfk/
+1
+&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"&gt;
+$ head -3 data/9
+http://old-www.cs.dartmouth.edu/~cs50/
+1
+&lt;!DOCTYPE html&gt;
+$  
+</code></pre>
+</div>
+
+<h3 id="directory-structure">Directory structure</h3>
+
+<p>My crawler consists of just two <code class="highlighter-rouge">.c</code> files: <code class="highlighter-rouge">crawler.c</code> (which contains <code class="highlighter-rouge">main()</code> and all the logic) and <code class="highlighter-rouge">web.c</code> (which provide helper functions that fetch and parse web pages); the glue is <code class="highlighter-rouge">web.h</code>.</p>
+
+<p>We add a subdirectory called <code class="highlighter-rouge">lib</code> in which we place the solution for <a href="/~cs50/Labs/Lab3/">Lab 3</a>. You can also find another module <code class="highlighter-rouge">memory</code> of general-purpose functions that help track <code class="highlighter-rouge">malloc</code>/<code class="highlighter-rouge">free</code> usage, and a new <code class="highlighter-rouge">Makefile</code>. The resulting directory looks like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>crawler/
+|-- Makefile
+|-- crawler.c
+|-- lib
+|   |-- Makefile
+|   |-- bag
+|   |   |-- Makefile
+|   |   |-- bag.c
+|   |   |-- bag.h
+|   |   `-- bagtest.c
+|   |-- counters
+|   |   |-- Makefile
+|   |   |-- counters.c
+|   |   |-- counters.h
+|   |   `-- counterstest.c
+|   |-- hashtable
+|   |   |-- Makefile
+|   |   |-- hashtable.c
+|   |   |-- hashtable.h
+|   |   |-- hashtest.c
+|   |   |-- jhash.c
+|   |   `-- jhash.h
+|   |-- set
+|   |   |-- Makefile
+|   |   |-- set.c
+|   |   |-- set.h
+|   |   `-- settest.c
+|   `-- memory
+|       |-- Makefile
+|       |-- memory.c
+|       `-- memory.h
+|-- web.c
+`-- web.h
+</code></pre>
+</div>
+
+<h3 id="memory-functions">Memory functions</h3>
+
+<p>In my <code class="highlighter-rouge">memory.c</code> file I include an extended version of my <code class="highlighter-rouge">malloc</code>/<code class="highlighter-rouge">free</code> tracking code, introduced in the <code class="highlighter-rouge">tree</code> series of programs.  These functions introduce a new concept: <code class="highlighter-rouge">assert</code>.  The traditional notion of an <code class="highlighter-rouge">assert</code> function is to “assert that a given condition is true, and if not, to print an error message and exit the program.”  In this case, I wanted a convenient way to test the pointers returning from <code class="highlighter-rouge">malloc</code> (and related calls); if NULL, which is an unexpected and rare occurrence, I want to print an error message and exit.</p>
+
+<blockquote>
+  <p>Such behavior is not really appropriate for your data-structure modules, which should handle it more gracefully, but suitable for our crawler because it is written as an application and not a module - we know it has an output stream, and know that exiting with a message to the user is ok.</p>
+</blockquote>
+
+<p>Here are two of the function prototypes:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cm">/**************** assertp ****************/</span>
+<span class="cm">/* If pointer p is NULL, print error message and die,
+ * otherwise, return p unchanged.  Works nicely as a pass-through:
+ *   thingp = assertp(malloc(sizeof(thing)), "thing");
+ */</span>
+<span class="kt">void</span> <span class="o">*</span><span class="n">assertp</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">message</span><span class="p">);</span>
+
+<span class="cm">/**************** count_malloc_assert() ****************/</span>
+<span class="cm">/* Like malloc() but track the number of successful allocations,
+ * and, if response is NULL, print error and die.
+ * Unlike malloc(), it takes a 'message' parameter.
+ */</span>
+<span class="kt">void</span> <span class="o">*</span><span class="n">count_malloc_assert</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">message</span><span class="p">);</span>
+
+</code></pre>
+</div>
+
+<p>The first is used by the second; indeed, the first line of <code class="highlighter-rouge">count_malloc_assert</code> is</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>  void *ptr = assertp(malloc(size), message);
+</code></pre>
+</div>
+
+<p>Notice that it acts like a pass-through function, when all is well.  The pointer coming from <code class="highlighter-rouge">malloc</code> is returned by <code class="highlighter-rouge">assertp</code> and is saved in the variable.  At that point it is assured to be non-NULL.  When <code class="highlighter-rouge">assertp</code> receives a NULL pointer, it prints a message to <code class="highlighter-rouge">stderr</code> and exits:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">void</span> <span class="o">*</span>
+<span class="nf">assertp</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">message</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"MALLOC FAILED: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">message</span><span class="p">);</span>
+    <span class="n">exit</span> <span class="p">(</span><span class="mi">99</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>There’s more in this <code class="highlighter-rouge">memory.c</code> module; see the <a href="/~cs50/Labs/Lab4.html">Lab 4</a> starter kit.</p>
+
+<h3 id="makefile">Makefile</h3>
+
+<p>The new <code class="highlighter-rouge">Makefile</code> in the <code class="highlighter-rouge">lib</code> directory does something new, something we’ve not seen before: it builds a library file. Here’s a snippet of that <code class="highlighter-rouge">lib/Makefile</code>:</p>
+
+<div class="language-make highlighter-rouge"><pre class="highlight"><code><span class="nv">LIB</span> <span class="o">=</span> cs50ds.a
+<span class="nv">OBJS</span> <span class="o">=</span> bag/bag.o <span class="nb">set</span>/set.o counters/counters.o <span class="se">\</span>
+        hashtable/hashtable.o hashtable/jhash.o memory/memory.o
+
+<span class="nl">$(LIB)</span><span class="o">:</span> <span class="nf">$(OBJS)</span>
+        <span class="err">ar</span> <span class="err">cr</span> <span class="err">$@</span> <span class="err">$^</span>
+
+<span class="nl">bag/bag.o</span><span class="o">:</span> <span class="nf">bag/bag.c bag/bag.h</span>
+        <span class="err">cd</span> <span class="err">bag;</span> <span class="err">$(MAKE)</span> <span class="err">bag.o</span>
+
+<span class="nl">set/set.o</span><span class="o">:</span> <span class="nf">set/set.c set/set.h</span>
+        <span class="err">cd</span> <span class="err">set;</span> <span class="err">$(MAKE)</span> <span class="err">set.o</span>
+
+</code></pre>
+</div>
+
+<p>The primary target is <code class="highlighter-rouge">cs50ds.a</code>, which is a “library archive” file (<code class="highlighter-rouge">a</code> stands for ‘archive’).  Such files are simply a bundle of object files (<code class="highlighter-rouge">.o</code> files), and are a convenient way to carry a lot of code around and enable applications to link with a whole bundle.  (All the functions you use from <code class="highlighter-rouge">stdio</code>, <code class="highlighter-rouge">string</code> and <code class="highlighter-rouge">libcurl</code> are packaged this way. Now you can make your own!)</p>
+
+<p>The <code class="highlighter-rouge">Makefile</code> goes on to list the set of object files that are needed: <code class="highlighter-rouge">OBJS</code>.</p>
+
+<p>Then it provides a rule to build the library <code class="highlighter-rouge">LIB</code> from the objects <code class="highlighter-rouge">OBJS</code>.  The command <code class="highlighter-rouge">ar</code> (‘archive’) with the <code class="highlighter-rouge">cr</code> option (which means ‘create’ and ‘replace’ as needed) combines the object files into a library.  When <code class="highlighter-rouge">make</code> is run, this rule executes the command line</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>ar cr cs50ds.a bag/bag.o <span class="nb">set</span>/set.o counters/counters.o hashtable/hashtable.o hashtable/jhash.o memory/memory.o
+</code></pre>
+</div>
+
+<p>Of course, <code class="highlighter-rouge">make</code> needs to know how to build those object files, so we provide a rule for each one.  Each rule identifies the object file, such as <code class="highlighter-rouge">bag/bag.o</code>, and the dependencies (here listing both the C and H files because <code class="highlighter-rouge">make</code> is not able to implicitly determine the C file in subdirectories).  The build command includes a <code class="highlighter-rouge">cd</code> to change down into the subdirectory, and then a call to <code class="highlighter-rouge">make</code> to build the desired target by using the <code class="highlighter-rouge">Makefile</code> in that subdirectory.</p>
+
+<p>To see the whole <code class="highlighter-rouge">Makefile</code>, see the <a href="/~cs50/Labs/Lab4.html">Lab 4</a> starter kit.</p>
+
+<h3 id="webpage-fetching-and-parsing">Webpage fetching and parsing</h3>
+
+<p>We also looked at the <code class="highlighter-rouge">web.c</code> and <code class="highlighter-rouge">web.h</code> files that are provided in the <a href="/~cs50/Labs/Lab4.html">Lab 4</a> starter kit.  This module defines the <code class="highlighter-rouge">WebPage</code> type:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="c1">// Structure to represent a web page, and its contents
+</span><span class="k">typedef</span> <span class="k">struct</span> <span class="n">WebPage</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">;</span>                               <span class="c1">// url of the page
+</span>  <span class="kt">char</span> <span class="o">*</span><span class="n">html</span><span class="p">;</span>                              <span class="c1">// html code of the page
+</span>  <span class="kt">size_t</span> <span class="n">html_len</span><span class="p">;</span>                         <span class="c1">// length of html code
+</span>  <span class="kt">int</span> <span class="n">depth</span><span class="p">;</span>                               <span class="c1">// depth of crawl
+</span><span class="p">}</span> <span class="n">WebPage</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>This module provides the following functions:</p>
+
+<ul>
+  <li><strong>GetWebPage</strong>: curl <code class="highlighter-rouge">page-&gt;url</code>, store into <code class="highlighter-rouge">page-&gt;html</code>.</li>
+</ul>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="n">bool</span> <span class="n">GetWebPage</span><span class="p">(</span><span class="n">WebPage</span> <span class="o">*</span><span class="n">page</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<ul>
+  <li><strong>GetNextURL</strong>: returns the next URL from <code class="highlighter-rouge">html[pos]</code> into <code class="highlighter-rouge">result</code>.</li>
+</ul>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="n">GetNextURL</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">html</span><span class="p">,</span> <span class="kt">int</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">base_url</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">result</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<ul>
+  <li><strong>NormalizeURL</strong>: returns false if the URL can’t be parsed or normalized; returns false if the url refers to a file unlikely to contain html; otherwise, modifies the URL into canonical form and returns true.</li>
+</ul>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="n">bool</span> <span class="n">NormalizeURL</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<ul>
+  <li><strong>IsInternalURL</strong>: Returns true if the URL is valid and ‘internal’ to our domain.</li>
+</ul>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="n">bool</span> <span class="n">IsInternalURL</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Read the <code class="highlighter-rouge">web.h</code> file for full documentation of the interfaces.</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

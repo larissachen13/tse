@@ -1,0 +1,173 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/17-indexer/
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lecture 17 - 18 - TSE Indexer Design</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/17-indexer/">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lecture 17 - 18 - TSE Indexer Design</h1>
+  </header>
+
+  <div class="post-content">
+    <h2 id="key-points-in-the-crawler-design">Key points in the crawler design</h2>
+
+<p>What are some of the key ideas in the crawler design?</p>
+
+<p>First, we <strong><em>separate application-specific logic from general-purpose utility modules.</em></strong>  By leveraging general-purpose modules from Lab 3, coding the crawler-specfic logic is much cleaner and simpler than if it were woven in with the data-structure code.</p>
+
+<blockquote>
+  <p>If your crawler weaves the logic of web crawling into the details of any of your data structures, you’ve missed this opportunity - your code is likely more complicated, more buggy, harder to debug, harder to test, harder to maintain, and much harder to reuse and extend.</p>
+</blockquote>
+
+<p>Second, we note <strong><em>good data-structure design is key to successful projects.</em></strong></p>
+
+<p>The design of the crawler remains simple because we chose two data structures - a <em>bag</em> for the set of pages yet to crawl, and a <em>hashtable</em> for the set of URLs already seen - that support the overall control flow.</p>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a>:
+&gt; <strong>Put abstractions in code, details in metadata</strong>
+&gt;  Program for the general case,
+&gt;  and put the specifics outside the compiled code base.</p>
+
+<p>On the other hand, when we get to the indexer and querier we may find that we need to adjust the data structures’ interface to provide slightly different functionality.  (Without breaking the general-purpose nature of the data structure modules.) It’s hard to have perfect foresight.</p>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a>:
+&gt; <strong>There are no final decisions</strong>
+&gt;  No decision is cast in stone. Instead, consider each as being written in the sand at the beach, and plan for change.</p>
+
+<p>Not all of the design decisions we made at the beginning of crawler made it through the implementation and testing to the final code. Many times you’ll say “it sounded like a good idea (design) at the time.” The software development process is precisely that: a process. It is not a programmer on a one-way street, but more like a chef crafting a new dish. You have a plan that everyone agrees on, you begin to execute on that plan, and sometimes conditions change and unexpected interactions arise. You have to handle them and and still get to the goal.</p>
+
+<p>Finally, many of you will find that <strong><em>shell scripts can automate testing.</em></strong> It’s far easier to test your crawler by writing a bash script to drive various test cases, or to examine the output for correctness, than to manually run a variety of tests for each new version of the code.</p>
+
+<blockquote>
+  <p><strong>“Use the Shell, Luke”</strong>.
+ Know and use your tools.</p>
+</blockquote>
+
+<h2 id="on-to-the-indexer">On to the Indexer!</h2>
+
+<p>The job of the <code class="highlighter-rouge">indexer</code> is to read the documents in the <code class="highlighter-rouge">pageDirectory</code> output by the <code class="highlighter-rouge">crawler</code>, build an inverted index mapping from words to documents, and write that index to a file.  (Later, the <code class="highlighter-rouge">querier</code> will read the index and use it to answer queries.)</p>
+
+<p>Now is a good time to read Section 4 in <em><a href="/~cs50/Reading/searchingtheweb.pdf">Searching the Web</a></em>, the paper about search engines.</p>
+
+<h3 id="data-structure-inverted-index">Data structure: Inverted index</h3>
+
+<p>We need a data structure to represent the inverted index.  It’s called an <em>inverted</em> index because it maps from words to documents, the opposite of a document (itself a sequence of words).</p>
+
+<p>A hashtable is a great start, because we can look up a word in a hashtable in O(1) time.  But what is in the hashtable?  For each word, we need a list of documents. (Not the documents themselves, silly, just the document IDs.) Actually, to enable us to later <em>rank</em> the matches, we’d also like to record how many times the given word appears in each document.</p>
+
+<p>Consider the data structures we have handy: hashtable, list, bag, and counters.  (Oh, and tree.)  A <em>hashtable of countersets</em> is perfect to map from a word to a list of (docID, count) pairs.  See the diagram below:</p>
+
+<p><img src="data-model.png" alt="Indexer data flow" /></p>
+
+<h3 id="command-line-interface">Command-line interface</h3>
+
+<p>The indexer consumes the <code class="highlighter-rouge">pageDirectory</code> and writes an index file; we thus need just two parameters:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>    ./indexer pageDirectory indexFilename
+</code></pre>
+</div>
+
+<p>We’ll also be writing a test program, which loads the index from a file and writes it back to another file.  If the load/save functions are correct, the two files should be identical (or at least, equivalent):</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>    ./indextest oldIndexFilename newIndexFilename
+</code></pre>
+</div>
+
+<p>We’ll need that ability to load index files in the querier.</p>
+
+<h3 id="indexer-pseudocode">Indexer pseudocode</h3>
+
+<p>Very high-level description of the indexer and indextest</p>
+
+<p><code class="highlighter-rouge">indexer</code>:</p>
+
+<ol>
+  <li>Process and validate command-line parameters</li>
+  <li>Initialize data structure index</li>
+  <li>index_build(directory, index)</li>
+  <li>index_save(file, index);</li>
+  <li>clean up data structures</li>
+</ol>
+
+<p><code class="highlighter-rouge">indextest</code>:</p>
+
+<ol>
+  <li>Process and validate command-line parameters</li>
+  <li>Initialize data structure index</li>
+  <li>index_load(file1, index)</li>
+  <li>index_save(file2, index)</li>
+  <li>clean up data structures</li>
+</ol>
+
+<p>Because some of our data-structure implementations have unspecified ordering - the order in which data appears when traversing the structure may not be the same as it appeared when inserted - the file saved by <code class="highlighter-rouge">indextest</code> may not be literally identical to the file read by <code class="highlighter-rouge">indextest</code>.  I will provide a little script <code class="highlighter-rouge">indexsort</code> that converts the index file into a ‘canonical’ ordering, making it possible to compare two index files for their content.</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

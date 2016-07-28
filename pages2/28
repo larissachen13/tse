@@ -1,0 +1,215 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/12-modules.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lecture 12 - Modular data structures in C</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/12-modules.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lecture 12 - Modular data structures in C</h1>
+  </header>
+
+  <div class="post-content">
+    <p>In this class we discuss C programming with a focus on the design of reusable modules for common data structures.</p>
+
+<h3 id="goals">Goals</h3>
+
+<ul>
+  <li>Understanding the importance of reusable modules.</li>
+  <li>Reiterating <code class="highlighter-rouge">extern</code> and header files.</li>
+  <li>General-purpose data structures with <code class="highlighter-rouge">void*</code>.</li>
+  <li>Reiterating <code class="highlighter-rouge">struct</code> and <code class="highlighter-rouge">typedef</code>.</li>
+</ul>
+
+<h2 id="modularity-and-reuse">Modularity and reuse</h2>
+
+<p>Some data structures are so common that it is valuable to code them once - lists, queues, stacks, trees, and hash tables - and then re-use that code for multiple programs (or multiple purposes within a program).  Code re-use saves time because you don’t need to write everything from scratch.  By using robust, well-tested modules rather than fresh (buggy) code, your program is more reliable. Finally, by separating ‘business logic’ from ‘data structures’, you the code is clearer and more flexible (e.g., if you later want to switch to a more-efficient data structure you can do so without rewriting all the business logic).</p>
+
+<p>Object-oriented languages make this easier, because they make it simple to define a ‘class’ of objects and then to create new ‘instances’ as needed.  Many such languages go further by providing ‘templates’ and ‘subclasses’ as a way to derive new variants of the base class.</p>
+
+<p>C has none of these capabilities.  But we can approximate some of these concepts through good style and careful design.</p>
+
+<h3 id="the-tree-example">The tree example</h3>
+
+<p>You are already familiar with binary trees.  Our in-class example is an implementation of binary trees in C, using a simple case wherein the tree holds pieces of data (integers) each identified with a key (also an integer). Examine the series of three successively better examples:</p>
+
+<ul>
+  <li><a href="/~cs50/examples/tree1">tree1</a> introduces a binary-tree module that stores integer ‘data’, each with a unique integer ‘key’. A simple test program (which could be improved!) demonstrates how to use <code class="highlighter-rouge">tree_insert</code> to build a tree; it could have called <code class="highlighter-rouge">tree_new</code> the first time, but does not have to do so as long as it keeps track of the pointer returned by the first call.  Note the use of recursion in <code class="highlighter-rouge">tree_insert</code> and <code class="highlighter-rouge">tree_find</code>, and look for the use of global, stack, and heap storage.</li>
+  <li><a href="/~cs50/examples/tree2">tree2</a> introduces a <code class="highlighter-rouge">typedef</code> to make the <code class="highlighter-rouge">struct treenode</code> type more opaque and yet more readable for users of this module. Try <code class="highlighter-rouge">cd ~cs50/public_html/examples; diff tree1/tree.c tree2/tree.c</code> to see what changed.</li>
+  <li><a href="/~cs50/examples/tree3">tree3</a> changes the tree from storing integers (with integer keys) to storing arbitrary pointers (with integer keys).  This tree is much more versatile because it can store pointers to any type of thing.  The test code only stores strings (which have addresses in static/global storage) but could have stored things created with <code class="highlighter-rouge">malloc</code>; it’s up to the user of the <code class="highlighter-rouge">tree</code> module to manage the pointers stored in the tree.</li>
+</ul>
+
+<p>This example demonstrates</p>
+
+<ul>
+  <li>A global variable (<code class="highlighter-rouge">root</code> in <code class="highlighter-rouge">tree.c</code>), albeit a forced example.</li>
+  <li>A global constant, shared across files (an error code returned from <code class="highlighter-rouge">tree_find</code>)</li>
+  <li>Local variables (like <code class="highlighter-rouge">node</code>, and function parameters).</li>
+  <li>Heap memory (created via <code class="highlighter-rouge">malloc</code> in <code class="highlighter-rouge">tree_new</code>).</li>
+  <li>A custom type (<code class="highlighter-rouge">struct treenode</code>) defined in one C file but exported opaquely to other C files via the <code class="highlighter-rouge">tree.h</code> file.</li>
+  <li>A set of functions exported via <code class="highlighter-rouge">tree.h</code> to other C files.</li>
+  <li>The use of pointers to build and manipulate a tree data structure.</li>
+  <li>The use of <code class="highlighter-rouge">void*</code> to represent “a pointer to anything” and its use to build a tree of generic things.</li>
+  <li>A reminder that strings - even constant strings, in double quotes - are stored in memory as arrays of characters and referenced by a <code class="highlighter-rouge">char*</code> pointer to their first character; thus even a constant string has an address and can be passed as a pointer.</li>
+  <li>The use of recursion. In this example, the recursion elegantly handles the base case, happily passing <code class="highlighter-rouge">NULL</code> pointers into <code class="highlighter-rouge">tree_find</code> and <code class="highlighter-rouge">tree_insert</code>.</li>
+</ul>
+
+<p>I did not implement any node-removal code, so there is no use of <code class="highlighter-rouge">free()</code> in this code.   (Try writing <code class="highlighter-rouge">tree_remove(TREE *root, int key)</code>!)</p>
+
+<p>With these basic versions, we continue to develop three new versions that make it more modular and more re-usable.</p>
+
+<p><strong><em>Example: <a href="/~cs50/examples/tree4">tree4</a></em></strong></p>
+
+<p>This code demonstrates an important design pattern:</p>
+
+<ul>
+  <li>
+    <p>Declare an opaque type <code class="highlighter-rouge">tree_t</code> that represents the overall data structure, and helper functions to create and destroy such structures. (By ‘opaque’ I mean that the contents of the structure are not known outside the module.)</p>
+  </li>
+  <li>
+    <p>Declare a (hidden) type <code class="highlighter-rouge">treenode_t</code> that represents the internal ‘nodes’ or elements of the data structure. (By ‘hidden’ I mean that the structure/type is not known outside the module.)</p>
+  </li>
+</ul>
+
+<p>This two-struct design further hides the structure and behavior of the tree data structure; the external user of this data structure simply gets a handle of type <code class="highlighter-rouge">tree_t *</code> when it creates a new tree, and passes that handle back in to all of the ‘methods’ of this data structure.  Unlike the previous version, it doesn’t have to know or understand why <code class="highlighter-rouge">tree_insert</code> might return a pointer different than the one passed in; that design detail is now rightfully hidden.</p>
+
+<p>This design also gives us the possibility of including other information about the tree - information about the tree as a whole, distinct from information about a specific tree node - within the <code class="highlighter-rouge">struct tree</code>; we don’t yet take advantage of that here.</p>
+
+<p>Notice how some functions inside <code class="highlighter-rouge">tree.c</code> are marked <code class="highlighter-rouge">static</code>, which indicates they are only visible within the file. (They are analogous to <code class="highlighter-rouge">private</code> methods in Java.) These private function prototypes are declared near the top of the file <code class="highlighter-rouge">tree.c</code>, so they are known to all other functions within this file, but not in <code class="highlighter-rouge">tree.h</code>, because no other C files will be able to use these ‘private’ functions anyway.</p>
+
+<p><strong><em>Example: <a href="/~cs50/examples/tree5">tree5</a></em></strong></p>
+
+<p>Here, we change the tree so it is keyed on words (strings) rather than integers. That is, we use a <code class="highlighter-rouge">char*</code> as key instead of an <code class="highlighter-rouge">int</code> as key, to enable storage of ‘things’ that are organized by words instead of numbers.</p>
+
+<p>Notice that it uses <code class="highlighter-rouge">malloc</code> to make a copy of the key string, and <code class="highlighter-rouge">strcmp</code> for comparing keys.  If the tree node were to be removed, the code would need to <code class="highlighter-rouge">free(node-&gt;key)</code> before <code class="highlighter-rouge">free(node)</code>.</p>
+
+<p><strong><em>Example: <a href="/~cs50/examples/tree6">tree6</a></em></strong></p>
+
+<p>Here we finally take advantage of the <code class="highlighter-rouge">struct tree</code> to hold other information of global relevance to the tree: a function pointer representing a ‘callback function’ to be used when desiring to print the contents of a node.  Think about it: the tree stores ‘things’ (pointers of type <code class="highlighter-rouge">void*</code>) indexed by strings (pointers of type <code class="highlighter-rouge">char*</code>), but the tree code has no idea what those ‘things’ are or how to print them.  This version of the code allows the module user (another C file) to provide a function that <em>does</em> know how to print those things. That function must have a prototype like</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>	<span class="kt">void</span> <span class="n">myprint</span><span class="p">(</span><span class="kt">FILE</span> <span class="o">*</span><span class="n">fp</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">key</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">thing</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>and must be provided to the tree module when the tree is created:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>  <span class="n">tree_t</span> <span class="o">*</span><span class="n">tree</span><span class="p">;</span>		     
+  <span class="n">tree</span> <span class="o">=</span> <span class="n">tree_new</span><span class="p">(</span><span class="n">myprint</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<h3 id="function-pointers">Function pointers</h3>
+
+<p>The concept of a <em>pointer to a function</em> can be confusing. Like any other pointer, it is an address in memory.  (This is that fourth type of memory, where the compiled code of the program lives.)  The instructions (compiled C code) for a given function reside at some address in that region of memory, and a function pointer is simply that address.</p>
+
+<p>Notice that we can refer to the function’s address simply by naming the function, without the syntax of calling a function. That is, <code class="highlighter-rouge">foo</code> is a function pointer, whereas <code class="highlighter-rouge">foo(a, b, c)</code> calls that function and passes arguments <code class="highlighter-rouge">a</code>, <code class="highlighter-rouge">b</code>, and <code class="highlighter-rouge">c</code>. In the above example, we pass the function pointer <code class="highlighter-rouge">myprint</code> as an argument to the <code class="highlighter-rouge">tree_new</code> function.</p>
+
+<p>So how do you call a function, given a function pointer?
+If I have a function pointer <code class="highlighter-rouge">printfunc</code>, I can assign to it and call it as follows:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>	<span class="n">printfunc</span> <span class="o">=</span> <span class="n">myprint</span><span class="p">;</span>
+	<span class="p">(</span><span class="o">*</span><span class="n">printfunc</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">thing</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>In other words, I dereference the pointer to get a function, and then call that function.  Notice the <code class="highlighter-rouge">*</code> and parens, <code class="highlighter-rouge">(*printfunc)</code>.</p>
+
+<p>How would I declare that variable <code class="highlighter-rouge">printfunc</code>? pretty gnarly syntax:</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code>  <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">printfunc</span><span class="p">)(</span><span class="kt">FILE</span> <span class="o">*</span><span class="n">fp</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">key</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>declares a <code class="highlighter-rouge">printfunc</code> to be a pointer to a function whose prototype looks like that of <code class="highlighter-rouge">myprint</code> above, that is, it takes the given three arguments and returns <code class="highlighter-rouge">void</code>.  Indeed, it looks almost like a prototype, except for that same <code class="highlighter-rouge">(*variablename)</code> notation.</p>
+
+<h3 id="further-extending-the-tree">Further extending the tree</h3>
+
+<p>The ‘tree’ module could be extended further, to implement</p>
+
+<ul>
+  <li><code class="highlighter-rouge">void tree_insert_copy(tree, key, data)</code>, like <code class="highlighter-rouge">tree_insert</code> but in which the data is copied to dynamic storage;</li>
+  <li><code class="highlighter-rouge">void *tree_remove(tree, key)</code>, to extract from the tree an item with the given key;</li>
+  <li><code class="highlighter-rouge">void tree_delete(tree)</code>, to deallocate all memory for the given tree.</li>
+</ul>
+
+<p>We’d need to extend <code class="highlighter-rouge">tree_new</code> to accept two more function pointers,</p>
+
+<ul>
+  <li><code class="highlighter-rouge">void * (*copyitem)(void *data)</code>, basically, a ‘copy constructor’ to allocate new memory for a thing, initialize that thing with a copy of the given data, and return a pointer to that new thing;</li>
+  <li><code class="highlighter-rouge">void (*deleteitem)(void *data)</code>, basically, a ‘destructor’ for a thing, which has the responsibility for deleting all memory associated with that thing; it returns nothing.</li>
+</ul>
+
+<p>Clearly, these functions are twins, one responsible for allocating (and initializing) new things, and the other for deallocating existing things.</p>
+
+<p>With these function pointers safely cached in the <code class="highlighter-rouge">struct tree</code>, the tree module could use them when needed (i.e., in <code class="highlighter-rouge">tree_insert_copy</code> and in <code class="highlighter-rouge">tree_delete</code>).</p>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

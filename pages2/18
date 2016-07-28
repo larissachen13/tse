@@ -1,0 +1,179 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/06-intro2c.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lecture 06 - Introduction to C</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/06-intro2c.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lecture 06 - Introduction to C</h1>
+  </header>
+
+  <div class="post-content">
+    <p>The first five lectures have been a crash course in the shell and shell programming. Now we move to the C language. We will spend the rest of the course developing our C and systems programming skill set by first understanding the basics of the language and then (through examples) study good code and write our own.</p>
+
+<p>This lecture will serve as an introduction to the C language. You may also want to read the “<a href="06x-intro2c.html">lecture extra</a>”, which has lots more information about C programming that I will not have time to cover in class.</p>
+
+<h3 id="goals">Goals</h3>
+
+<p>We will learn the following from today’s lecture:</p>
+
+<ul>
+  <li>Structure</li>
+  <li>Operators</li>
+  <li>Precedence</li>
+  <li>Base data types</li>
+  <li>Storage modifiers</li>
+  <li>Scope rules of global and local variables</li>
+  <li>Flow of control in C programs</li>
+</ul>
+
+<h3 id="reading">Reading</h3>
+
+<p>We elected not to require a specific textbook on C. There are many to choose from, including a good text online (see the <a href="/~cs50/Resources">Resources page</a>). The Harbison and Steele book is very highly recommended and is, as I’ve said in class, an excellent reference and learning resource. But it is not a tutorial. When I do reference it, I will use the shorthand “H&amp;S”.</p>
+
+<p>If you feel you need more of a C textbook, either use the one online or see the professor for recommendations of good ones. For example, past incarnations of this course used the text by Bronson, <em><a href="http://www.amazon.com/First-Book-Fourth-Introduction-Programming/dp/1418835560/ref=sr_1_1?ie=UTF8&amp;qid=1326594741&amp;sr=8-1">A First Book of ANSI C</a></em>. It’s not bad, and there are lots of others, including some that you can get electronically, like Prinz’s <em><a href="http://www.amazon.com/C-Nutshell-OReilly-ebook/dp/B0043GXMRK/ref=sr_1_2?ie=UTF8&amp;qid=1326594935&amp;sr=8-2">C in a Nutshell</a></em> (O’Reilly).</p>
+
+<h2 id="c">C</h2>
+
+<p>C can be correctly described as a successful, general-purpose programming language, a description also given to Java and C++. C is a <em>procedural</em> programming language, not an <em>object-oriented</em> language like Java or C++. Programs written in C can be described as ‘good’ programs if they are written clearly, make use of high-level programming practices, and are well-documented with sufficient comments and meaningful variable names. Of course, all of these properties are independent of C and are traits of good programming in any high-level language.</p>
+
+<p>C has the high-level programming features provided by most procedural programming languages - strongly typed variables, constants, structured types, enumerated types, a mechanism for defining your own types, aggregate structures, control structures, recursion and program modularization.</p>
+
+<p>C does not support sets of data, Java’s concept of a <em>class</em> or objects, nested functions, nor subrange types and their use as array subscripts, and has only recently added a Boolean datatype.</p>
+
+<p>C does have, however, separate compilation, conditional compilation, bitwise operators, pointer arithmetic and language independent input and output. The decision about whether C, C++, or Java is the best general-purpose programming language (if that question can be decided, or even needs to be decided), is not going to be an easy one.</p>
+
+<p>C is the programming language of choice for most systems-level, engineering, and scientific programming. The world’s popular operating systems - Linux, Windows, and Mac OS X, their interfaces and file systems, are written in C; the infrastructure of the Internet, including most of its networking protocols, web servers, and email systems, are written in C; software libraries providing graphical interfaces and tools, and efficient numerical, statistical, encryption, and compression algorithms, are written in C; and the software for most embedded devices, including those in cars, aircraft, robots, smart appliances, sensors, and game consoles, is written in C. Recent mobile devices such as the iPhone, iPad, and some Microsoft products use languages derived from C, such as Objective C, C++, and C#.</p>
+
+<p>The TIOBE Programming Community index is another indicator of the popularity of programming languages. Updated monthly, it provides a great historical look at this topic. See the latest results <a href="http://www.tiobe.com/index.php/content/paperinfo/tpci/index.html">here</a>.</p>
+
+<p>C’s overall philosophy is “get out of the programmer’s way.” C is often criticized for allowing the programmer to do pretty much whatever he/she wants. Some sample quotes noted by Prof. Stephen Edwards on this topic are:</p>
+
+<blockquote>
+  <p>“Pascal treats you like a misbehaving child”
+ (created by an Educator)</p>
+
+  <p>“Ada treats you like a criminal”
+ (created by DoD)</p>
+
+  <p>“C treats you like a consenting adult”
+ (created by a programmer)</p>
+</blockquote>
+
+<h2 id="examples">Examples</h2>
+<p>In class we iteratively build a C version of our friend <a href="/~cs50/examples/guessprime.sh">guessprime.sh</a>, and then enhance it.</p>
+
+<p>You can see the pre-prepared code below.</p>
+
+<ul>
+  <li><a href="/~cs50/examples/guessprime1.c">guessprime1.c</a>: (simple replacement for the bash program)</li>
+  <li><a href="/~cs50/examples/guessprime2.c">guessprime2.c</a>: (add readGuess() function)</li>
+  <li><a href="/~cs50/examples/guessprime3.c">guessprime3.c</a>: (move readGuess() function to bottom, declare function prototype)</li>
+  <li><a href="/~cs50/examples/guessprime4.c">guessprime4.c</a>: (add isPrime() function; check bounds of input; args in prototypes)</li>
+  <li><a href="/~cs50/examples/guessprime5.c">guessprime5.c</a>: (add listPrimes() feature)</li>
+  <li><a href="/~cs50/examples/guessprime6.c">guessprime6.c</a>: (handle non-numeric input from user)</li>
+  <li><a href="/~cs50/examples/guessprime7.c">guessprime7.c</a>: (pick a random answer)</li>
+  <li><a href="/~cs50/examples/guessprime8.c">guessprime8.c</a>: (support command-line arguments)</li>
+</ul>
+
+<p>You can compare one version with another using <code class="highlighter-rouge">diff</code> (here, I also use the <code class="highlighter-rouge">[]</code> filename expansion in bash):</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="o">[</span>cs50@flume ~]<span class="nv">$ </span>diff guessprime[45].c
+2,3c2,3
+&lt;  <span class="k">*</span> guessprime4.c - a C version of our bash demo program
+&lt;  <span class="k">*</span>  <span class="o">(</span>add isPrime<span class="o">()</span> <span class="k">function</span>; check bounds of input; args <span class="k">in </span>prototypes<span class="o">)</span>
+---
+<span class="gp">&gt;  </span><span class="k">*</span> guessprime5.c - a C version of our bash demo program
+<span class="gp">&gt;  </span><span class="k">*</span>  <span class="o">(</span>add listPrimes<span class="o">()</span> feature<span class="o">)</span>
+13a14
+<span class="gp">&gt; </span>void listPrimes<span class="o">(</span>const int min, const int max<span class="o">)</span>;
+25a27,29
+<span class="gp">&gt;   </span><span class="nb">printf</span><span class="o">(</span><span class="s2">"You win! here's a list of primes in [1..100]:</span><span class="se">\n</span><span class="s2">"</span><span class="o">)</span>;
+<span class="gp">&gt;   </span>listPrimes<span class="o">(</span>1, 100<span class="o">)</span>;
+<span class="gp">&gt; </span>
+58a63,72
+<span class="gp">&gt; </span><span class="o">}</span>
+<span class="gp">&gt; </span>
+<span class="gp">&gt; </span>
+<span class="gp">&gt; </span>// print all the primes between min and max, inclusive
+<span class="gp">&gt; </span>void listPrimes<span class="o">(</span>const int min, const int max<span class="o">)</span> <span class="o">{</span>
+<span class="gp">&gt;   </span><span class="k">for</span> <span class="o">(</span>int <span class="nv">p</span><span class="o">=</span>min; p &lt;<span class="o">=</span> max; p++<span class="o">)</span> <span class="o">{</span>
+<span class="gp">&gt;     </span><span class="k">if</span> <span class="o">(</span>isPrime<span class="o">(</span>p<span class="o">))</span>
+<span class="gp">&gt;       </span><span class="nb">printf</span><span class="o">(</span><span class="s2">"%d "</span>, p<span class="o">)</span>;
+<span class="gp">&gt;   </span><span class="o">}</span>
+<span class="gp">&gt;   </span><span class="nb">printf</span><span class="o">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">)</span>;
+<span class="o">[</span>cs50@flume ~]<span class="nv">$ </span>
+</code></pre>
+</div>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

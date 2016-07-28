@@ -1,0 +1,529 @@
+http://old-www.cs.dartmouth.edu/~cs50/Lectures/15-designcrawler/index.html
+3
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lecture 15 - Software design methodology, and design of the Crawler</title>
+  <meta name="description" content="In Computer Science 50 you will learn how to design & build large,  reliable, maintainable, and understandable software systems.  In the process you will learn to program in C with Unix development tools.
+">
+
+  <link rel="stylesheet" href="/~cs50/css/main.css">
+  <link rel="canonical" href="http://www.cs.dartmouth.edu/~cs50/Lectures/15-designcrawler/">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+    <a class="site-title" href="/~cs50/">CS50 Summer 2016</a>
+
+    <nav class="site-nav">
+
+      [<a href="https://canvas.dartmouth.edu/courses/15260">Canvas</a>]
+      [<a href="https://piazza.com/dartmouth/summer2016/cs50/home">Piazza</a>]
+      [<a href="https://gitlab.cs.dartmouth.edu">Gitlab</a>]
+      [<a href="/~cs50/Schedule.pdf">Schedule</a>]
+      [<a href="/~cs50/Lectures/">Lectures</a>]
+      [<a href="/~cs50/Reading/">Reading</a>]
+<!--      [<a href="/~cs50/examples/">Examples</a>]  -->
+      [<a href="/~cs50/Logistics/">Logistics</a>]
+      [<a href="/~cs50/Resources/">Resources</a>]
+      [<a href="/~cs50/Labs/">Labs</a>]
+      [<a href="/~cs50/Project/">Project</a>]
+
+   </nav>
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Lecture 15 - Software design methodology, and design of the Crawler</h1>
+  </header>
+
+  <div class="post-content">
+    <h2 id="goals">Goals</h2>
+
+<p>In this lecture, we will introduce a simple software design methodology and apply it to the the top level design of the TinySearch Engine crawler.</p>
+
+<p>We learn the following in today’s lecture:</p>
+
+<ul>
+  <li>Software system design methodology</li>
+  <li>Crawler requirements and operations</li>
+  <li>Top-level design of the crawler</li>
+</ul>
+
+<blockquote>
+  <p><em>All programmers are optimists</em> – Frederick P. Brooks, Jr.</p>
+</blockquote>
+
+<p>Here’s a cool source of thoughtful maxims for software development: <em>The Pragmatic Programmer</em>, by Andrew Hunt and David Thomas (2000, Addison Wesley). Their book is super, and their <a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">“tip list” is available on the web</a>. We will continue to sprinkle some of their tips throughout the lectures.</p>
+
+<h2 id="software-system-design-methodology">Software system design methodology</h2>
+
+<p>There have been many books written on how to write good code. Some are intuitive: top-down or bottom-up design; divide and conquer (breaking the system down into smaller more understandable components), structured design (data flow-oriented design approach), object oriented design (modularity, abstraction, and information-hiding). For a quick survey of these and other techniques, see <em><a href="survey.html">A Survey of Major Software Design Methodologies</a></em> (author unknown).</p>
+
+<p>Many of these techniques use similar approaches, and embrace fundamental concepts like
+ * Abstraction and decomposition;
+ * data representation, data flow, and data structures;
+ * top-down decomposition from requirements to structure.</p>
+
+<p>It seems unlikely that someone could give you 10 steps to follow and be assured of great system software. Every non-trivial project has its special cases, unique environments, or unexpected uses.  It’s often best to begin development of a module, or a system, with small experiments - building a prototype and throwing it away - because you can learn (and make mistakes) building small prototype systems.</p>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a> :
+&gt; <strong>Prototype to Learn.</strong>
+&gt;  Prototyping is a learning experience. Its value lies not in the code you produce, but in the lessons you learn.</p>
+
+<p>Clarity comes from the experience of working from requirements, through system design, implementation and testing, to integration and customer feedback on the requirements.</p>
+
+<p>The following figure shows the software design methodology that we use in the design of the TinySearchEngine and the project.</p>
+
+<p><img src="SWDesignMethology.png" alt="Software system design methodology" /></p>
+
+<hr />
+
+<h2 id="procurement-phase">Procurement phase</h2>
+
+<p>The procurement phase of a project represents its early stages. It represents deep discussion between a customer and provider of software systems. As a software developer, you have to clearly understand and capture the customers’ needs. In our case, you are the provider and we (CS50 staff) are your customer.</p>
+
+<h3 id="requirements-spec">Requirements Spec</h3>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a> :
+&gt; <strong>Don’t Gather Requirements – Dig for Them.</strong>
+&gt;  Requirements rarely lie on the surface. They’re buried deep beneath layers of assumptions, misconceptions, and politics.</p>
+
+<p>The system Requirements Spec captures all the requirements of the system that the customer wants built. Typically the provider and customer get into deep discussion of requirements and their cost. The requirements <em>must</em> be written down, and reviewed by both customer and provider, to be sure all are in agreement.  Sometimes these documents are written in contractual (legal) language. If the customer gets a system that does not meet the spec, or the two parties disagree about whether the finished product meets the spec, lawyers may get involved. If a system is late, financial penalties may arise.</p>
+
+<blockquote>
+  <p>“<em>The hardest part of design… is keeping features out.</em>” – Anonymous</p>
+</blockquote>
+
+<p>The system requirement spec may have a variety of requirements typically considered <strong>the SHALLS</strong> - such as, <em>“the crawler SHALL crawl 1000 sites in 5 minutes”</em>.  These requirements include functional requirements, performance requirements, security requirements, and cost requirements.</p>
+
+<p>A common challenge during this phase is that the customer either doesn’t know what he/she really wants or expresses it poorly (in some extreme cases the customer may not be able to provide you with the ultimate intended use of your system due to proprietary or security concerns). You must realize that the customer may have these difficulties and iterate with the customer until you both are in full agreement. One useful technique is to provide the customer with the system requirements specification (and sometimes later specs too) and then have the customer explain the spec to us. It is amazing how many misunderstandings and false assumptions come to light when the customer is doing the explaining.</p>
+
+<p>The Requirements Spec may address many or all of the following issues:</p>
+
+<ul>
+  <li>functionality - what should the system do?</li>
+  <li>performance - goals for speed, size, energy efficiency, etc.</li>
+  <li>cost - goals for cost, if system operation incurs costs</li>
+  <li>compliance - with federal/state law or institutional policy</li>
+  <li>compatibility - with standards or with existing systems</li>
+  <li>security - against specific threat model under certain trust assumptions</li>
+</ul>
+
+<p>A new concern of system development is the issue of the services-oriented model referred to as the “cloud” (Software As A Service, Infrastructure As A Service, etc.). The decision of whether to develop a specific system running in a traditional manner or to build a cloud-based solution should be made early, as it will affect many of the later stages of the development process. Some would argue about where it needs to fit in the methodology, but we feel that the sooner you (and the customer) know where this system is headed, the better.</p>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a> :
+&gt; <strong>Make quality a requirements issue.</strong>
+&gt;  Involve your users in determining the project’s real quality requirements.</p>
+
+<p>Although the customer may make some assumptions on this point, it’s in your best interests to make it a priority. Remember the “broken window theory”.</p>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a> :
+&gt; <strong>Don’t Live with Broken Windows.</strong>
+&gt;  Fix bad designs, wrong decisions, and poor code when you see them.</p>
+
+<h3 id="design-spec">Design Spec</h3>
+
+<p>The <em>Design Spec</em> is the result of studying the system requirements and applying the art of design <em>(the magic)</em> with a design team. In this phase, you translate the requirements into a full system-design specification. This design specification shows how the complete system is broken up into specific subsystems, and all of the requirements are mapped to those subsystems. The Design spec for a system, subsystem, or module includes:</p>
+
+<ul>
+  <li>User interface</li>
+  <li>Inputs and outputs</li>
+  <li>Functional decomposition into modules</li>
+  <li>Dataflow through modules</li>
+  <li>Pseudo code (plain English-like language) for logic/algorithmic flow</li>
+  <li>Major data structures</li>
+  <li>Testing plan</li>
+</ul>
+
+<p>To this last point:</p>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a> :
+&gt; <strong>Design to Test.</strong>
+&gt;  Start thinking about testing before you write a line of code.</p>
+
+<p>The Design Specification is independent of your choice of language, operating system, and hardware. In principle, it could be implemented in any language from Java to micro-code and run on anything from a Cray supercomputer to a toaster.</p>
+
+<h2 id="implementation-phase">Implementation phase</h2>
+
+<p>In this phase, we turn the Design Spec into an Implementation Spec, then code up the modules, unit-test each module, integrate the modules and test them as an integrated sub-system and then system.</p>
+
+<h3 id="implementation-spec">Implementation Spec</h3>
+
+<p>The <em>Implementation Spec</em> represents a further refinement and decomposition of the system. It is language, operating system, and hardware <strong>dependent</strong> (in many cases, the language abstracts the OS and HW out of the equation but not in this course). The implementation spec includes many or all of these topics:</p>
+
+<ul>
+  <li>Detailed pseudo code for each of the objects/components/functions,</li>
+  <li>Definition of detailed APIs, interfaces, function prototypes and their parameters,</li>
+  <li>Data structures (e.g., <code class="highlighter-rouge">struct</code> names and members),</li>
+  <li>Security and privacy properties,</li>
+  <li>Error handling and recovery,</li>
+  <li>Resource management,</li>
+  <li>Persistant storage (files, database, etc).</li>
+</ul>
+
+<h3 id="coding">Coding</h3>
+
+<p>Coding is often the fun part of the software development cycle - but not usually the largest amount of time.  As a software developer in industry, you might spend only about 20% of your time coding (perhaps a lot more if you’re in a startup). The rest of the time will be dealing with the other phases of the methodology, particularly, the last few: testing, integration, fixing problems with the product and meetings with your team and with your customers.</p>
+
+<h4 id="goals-during-coding">Goals during coding:</h4>
+
+<ul>
+  <li>
+    <p>Correctness: The program is correct (i.e., does it work) and error free. Duh?</p>
+  </li>
+  <li>
+    <p>Clarity: The code is easy to read, well commented, and uses good variable and function names. In essence, is it easy to use, understand, and maintain</p>
+
+    <blockquote>
+      <p>Clarity makes sure that the code is easy to understand by people with a range of skills, and across a variety of machine architectures and operating systems. [Kernighan &amp; Pike]</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>Simplicity: The code is as simple as possible, but no simpler.</p>
+
+    <blockquote>
+      <p>Simplicity keeps the program short and manageable. [Kernighan &amp; Pike]</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>Generality: The program can easily adapt to change.</p>
+
+    <blockquote>
+      <p>Generality means the code can work well in a broad range of situations and is tolerant of new environments (or can be easily made to do so). [Kernighan &amp; Pike]</p>
+    </blockquote>
+  </li>
+</ul>
+
+<h3 id="unit-and-sub-system-testing">Unit and sub-system testing</h3>
+
+<p><a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a> :
+&gt; <strong>Test your software, or your users will.</strong></p>
+
+<p>Testing is a critical part of the whole process of any development effort, whether you’re building bridges or software. Unit testing of modules in isolation, and integration testing as modules are assembled into sub-systems and, ultimately, the whole system, result in better, safer, more reliable code. We’ll talk more about testing soon.</p>
+
+<p>The ultimate goal of testing is to exercise all paths through the code. Of course, with most applications this may prove to be a daunting task. Most of the time the code will execute a small set of the branches in the module. So when special conditions occur and newly executed code paths fail, it can be really hard to find those problems in large complex pieces of code.</p>
+
+<p>The better organized and modularized your code is, the easier it will be to understand, test, and maintain - even by you!</p>
+
+<p>Write test scripts (tools) throughout the development process to quickly give confidence that even though 5% of new code has been added, no new bugs emerged because our test scripts assured of that.</p>
+
+<h3 id="integration-testing">Integration testing</h3>
+
+<p>The system is incrementally developed, put together and tested at various levels. Subsystems could integrate many modules, and sometimes, new hardware. The developer will run the integrated system against the original requirements to see if there are any ‘gotchas’. For example, some performance requirements can only be tested once the full system comes together, while other, commonly used utility functions could have performance analysis done on them early on. You can simulate external influences as well, such as increasing the external processing or communications load on the host system as a way to see how your program operates when the host system is heavily loaded or resource limited.</p>
+
+<p>Real-world anecdote #1 (from Andrew Campbell):</p>
+
+<blockquote>
+  <p>Many times systems collapse under load and revisions might be called for in the original design. Here is an example. I was once hired to improve the performance of a packets switched radio system. It was a wireless router. It was also written in Ada. The system took 1 second to forward a packet from its input radio to its output radio. I studied the code. After two weeks I made a radical proposal. There was no way to get the transfer down to 100 msec I told the team without redesign and recoding. However, I said if we remove all the tasking and rendezvous (a form of inter process communications) I could meet that requirement, possibly. That decision had impacts on generality because now the system looked like one large task. The change I made took 100 lines of Ada. I wrote a mailbox (double linked list) for messages passing as a replacement for process rendezvous. The comms time came down to 90 msec! Usually contractors get treated like work dogs in industry but for a week I was King. They also gave me a really juicy next design job. The message here is that study the code and thinking deeply is much more helpful than hacking your way out of the problem guns blasting!</p>
+</blockquote>
+
+<p>Real-world anecdote #2 (from IBM Research):</p>
+
+<blockquote>
+  <p>When the Advanced Encryption Standard (AES) was announced, everyone was dashing off to implement it on their platforms. DS, a colleague of mine, had been handed the challenge of improving the performance of the implementation from the “crypto expert”. It was running encryptions at only 4MB/second which, for that particular computer, was REALLY slow. An extraordinary programmer himself, DS poured over the code for days and just couldn’t find a better way than what the original author had done. Then he took a step back and thought about the larger situation: we need a fast implementation of AES that runs blindingly fast on a particular platform. That’s when inspiration came: DS wondered whether there were specific hardware-level instructions on that platform that might help. Sure enough, after a day of digging through the documentation, he found a couple of instructions that might speed things up a lot … but the algorithm needed to be totally reworked around those instructions. DS began deconstructing the algorithm into its basic parts, and then turned some data structures around a bit and rebuilt the program in a different way so that he could use the special hardware instructions he’d found. Once he finished the rewrite, and proved that his “twisted” implementation of the AES standard was totally compatible with others, he demonstrated the new code running at 400 MB/second!</p>
+</blockquote>
+
+<p>To quote the Pragmatic Programmer again:
+&gt; <a href="http://pragprog.com/the-pragmatic-programmer/extracts/tips">Pragmatic Programmer Tip</a> :
+&gt; <strong>Don’t Think Outside the Box – Find the Box.</strong></p>
+
+<p>When faced with an impossible problem, identify the real constraints. Ask yourself: “Does it have to be done this way? Does it have to be done at all?”</p>
+
+<h2 id="feedback-phase">Feedback phase</h2>
+
+<p>In this phase, the design team sits down with its customer and demonstrates its implementation.  The customer and the team review the original requirement spec and checks each requirement for completion.</p>
+
+<p>In the TSE and project we emphasize understanding the requirements of the system we want to build, writing good design and implementation specs <em>before</em> coding. You shall apply the coding principles of simplicity, clarity, and generality (we will put more weight on these as we move forward with assignments and the project).</p>
+
+<h2 id="tiny-search-engine">Tiny Search Engine</h2>
+
+<blockquote>
+  <p>Our Tiny Search Engine (TSE) design is inspired by the material in the paper <em><a href="/~cs50/Reading/searchingtheweb.pdf">Searching the Web</a></em>, Arvind Arasu, Junghoo Cho, Hector Garcia-Molina, Andreas Paepcke, Sriram Raghavan (Stanford University). <em>ACM Transactions on Internet Technology (TOIT),</em> Volume 1, Issue 1 (August 2001).</p>
+</blockquote>
+
+<h2 id="tse-requirements-spec">TSE Requirements Spec</h2>
+
+<p><em>These are draft requirements.  The official requirements will be in the <a href="/~cs50/Labs/Lab4.html">Lab 4</a> specifications.</em></p>
+
+<p>The Tiny Search Engine (TSE) <strong>shall</strong> consist of three subsystems:</p>
+
+<blockquote>
+  <ol>
+    <li><strong>crawler</strong>, which crawls the web from a given seed to a given depth and caches the content of the pages it finds, one page per file, in a given directory.</li>
+    <li><strong>indexer</strong>, which reads files from the given directory, builds an index that maps from <em>words</em> to <em>pages</em> (URLs), and writes that index to a given file.</li>
+    <li><strong>querier</strong>, which reads the index from a given file, and a query expressed as a set of words optionally combined by (AND, OR), and outputs a ranked list of pages (URLs) in which the given combination of words appear.</li>
+  </ol>
+</blockquote>
+
+<blockquote>
+  <p>Each subsystem is a standalone program executed from the command line, but they inter-connect through files in the file system.</p>
+</blockquote>
+
+<blockquote>
+  <p>Recall that <em>shall do</em> means <em>must do</em>.</p>
+</blockquote>
+
+<p>We’ll look deeper at the requirements for the each subsystem, later.  First, let’s go to the next level on the overall TSE: the Design Spec.</p>
+
+<h3 id="tse-design-spec">TSE Design Spec</h3>
+
+<p>The overall architecture presented below shows the modular decomposition of the system:</p>
+
+<p><img src="designandcrawler1x.png" alt="Tiny Search Engine modular design" /></p>
+
+<hr />
+
+<p>The above diagram is consistent with the Requirements Spec: we can clearly see three sub-systems, their interconnection through files, and the user interface for submitting queries to the querier.  The querier subsystem has an internal <em>ranking</em> module, which we anticipate might be separate from the <em>query processor</em> module; we’ll look more closely when we come to the querier design.</p>
+
+<p>Next, we describe each sub-system and its high-level design.</p>
+
+<p>The <strong>crawler</strong> crawls a website and retrieves webpages starting with a specified URL. It parses the initial webpage, extracts any embedded <code class="highlighter-rouge">href</code> URLs and retrieves those pages, and crawls the pages found at those URLs, but limiting itself to <code class="highlighter-rouge">maxDepth</code> hops from the seed URL.  When the crawler process is complete, the indexing of the collected documents can begin.</p>
+
+<p>The <strong>indexer</strong> extracts all the keywords for each stored webpage and records the URL where each word was found. It creates a lookup table that maps each word found to all the URLs (webpages) where the word was found.</p>
+
+<p>The <strong>query engine</strong> responds to requests (queries) from users. The query module loads the index and searches for pages that include the search keywords.  Because there may be many hits, we need a <em>ranking module</em> to rank the results (e.g., high to low number of instances of a keyword on a page).</p>
+
+<h3 id="tse-crawler-requirements-spec">TSE Crawler Requirements Spec</h3>
+
+<p>We’ll look deeper at the requirements for the indexer and querier later. 
+Right now, let’s focus on the crawler.</p>
+
+<p>The TSE crawler is a standalone program that crawls the web and retrieves webpages starting from a “seed” URL. It parses the seed webpage, extracts any embedded URLs, then retrieves each of those pages, recursively, but limiting its exploration to a given “depth”.</p>
+
+<p>The crawler <strong>shall</strong>:</p>
+
+<blockquote>
+  <ol>
+    <li>execute from a command line with usage syntax
+      <ul>
+        <li><code class="highlighter-rouge">./crawler seedURL pageDirectory maxDepth</code></li>
+        <li>where <code class="highlighter-rouge">seedURL</code> is considered as the initial URL,</li>
+        <li>where <code class="highlighter-rouge">pageDirectory</code> is a directory in which to download webpages, and</li>
+        <li>where <code class="highlighter-rouge">maxDepth</code> is the maximum crawl depth.</li>
+      </ul>
+    </li>
+    <li>crawl all pages reachable from <code class="highlighter-rouge">seedURL</code>, following <code class="highlighter-rouge">href</code> links to a maximum depth of <code class="highlighter-rouge">maxDepth</code>; where <code class="highlighter-rouge">maxDepth=0</code> means that crawler only explores the page at <code class="highlighter-rouge">seedURL</code>, <code class="highlighter-rouge">maxDepth=1</code> means that crawler only explores the page at <code class="highlighter-rouge">seedURL</code> and those pages to which <code class="highlighter-rouge">seedURL</code> links, and so forth inductively.</li>
+    <li>pause at least one second between page fetches.</li>
+    <li>write each explored page to the <code class="highlighter-rouge">pageDirectory</code> with a unique document ID,
+      <ul>
+        <li>wherein the document <code class="highlighter-rouge">id</code> increments by 1 for each new page,</li>
+        <li>and the filename is of form <code class="highlighter-rouge">pageDirectory/id</code>,</li>
+        <li>and the first line of the file is the URL,</li>
+        <li>and the second line of the file is the depth,</li>
+        <li>and the rest of the file is the page content.</li>
+      </ul>
+    </li>
+  </ol>
+</blockquote>
+
+<h3 id="tse-crawler-design-spec">TSE Crawler Design Spec</h3>
+
+<p>Recall our description from the overall design, above:
+The <strong>crawler</strong> crawls a website and retrieves webpages starting with a specified URL. It parses the initial webpage, extracts any embedded <code class="highlighter-rouge">href</code> URLs and retrieves those pages, and crawls the pages found at those URLs, but limiting itself to <code class="highlighter-rouge">maxDepth</code> hops from the seed URL.  When the crawler process is complete, the indexing of the collected documents can begin.</p>
+
+<p>Now we can step through the set of sections a Design Spec should contain.</p>
+
+<h3 id="user-interface">User interface</h3>
+
+<p>An example of the command-line interface for the crawler is as follows:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>crawler http://old-www.cs.dartmouth.edu/index.html ./data/ 2
+</code></pre>
+</div>
+
+<h3 id="inputs-and-outputs">Inputs and outputs</h3>
+
+<p>Input: the only inputs are command-line parameters; see the User Interface below.</p>
+
+<p>Output: We save each explored webpages to a file, one file per page.<br />
+We use a unique document ID as the file name, for document IDs 1, 2, 3, 4, …. 
+Within a file, we write</p>
+
+<ul>
+  <li>the page URL on the first line,</li>
+  <li>the depth of the page (where the seed is depth 0) on the second line,</li>
+  <li>the page contents, beginning on the third line.</li>
+</ul>
+
+<p>See examples below.</p>
+
+<h3 id="functional-decomposition-into-modules">Functional decomposition into modules</h3>
+
+<p>We anticipate the following modules or functions:</p>
+
+<ol>
+  <li><em>main</em>, which parses arguments and initializes other modules</li>
+  <li><em>crawler</em>, which loops over pages to explore, until the list is exhausted</li>
+  <li><em>pagefetcher</em>, which fetches a page from a URL</li>
+  <li><em>pagescanner</em>, which extracts URLs from a page and processes each one</li>
+  <li><em>pagesaver</em>, which outputs a page to the the appropriate file</li>
+</ol>
+
+<p>And some helper modules that provide data structures:</p>
+
+<ol>
+  <li><em>bag</em> of pages</li>
+  <li><em>hashtable</em> of URLs</li>
+</ol>
+
+<h3 id="pseudo-code-for-logicalgorithmic-flow">Pseudo code for logic/algorithmic flow</h3>
+
+<p>The crawler will follow roughly the following outline:</p>
+
+<ol>
+  <li>execute from a command line with usage syntax
+    <ul>
+      <li><code class="highlighter-rouge">./crawler seedURL pageDirectory maxDepth</code></li>
+      <li>where <code class="highlighter-rouge">seedURL</code> is considered as the initial URL,</li>
+      <li>where <code class="highlighter-rouge">pageDirectory</code> is a directory in which to download webpages, and</li>
+      <li>where <code class="highlighter-rouge">maxDepth</code> is the maximum crawl depth.</li>
+    </ul>
+  </li>
+  <li>parse the command line, validate parameters, initialize other modules</li>
+  <li>make a <em>page</em> for the <code class="highlighter-rouge">seedURL</code>, marked with depth=0</li>
+  <li>add that page to the <em>bag</em> of pages</li>
+  <li>while there are more pages to crawl,
+    <ol>
+      <li>extract a page (URL,depth) item from the <em>bag</em> of pages to be crawled,</li>
+      <li>pause for at least one second,</li>
+      <li>use <em>pagefetcher</em> to retrieve a page for that URL,</li>
+      <li>use <em>pagesaver</em> to write the page to the <code class="highlighter-rouge">pageDirectory</code> with a unique document ID,
+        <ol>
+          <li>wherein the document id increments by 1 for each new page,</li>
+          <li>and the filename is of form <code class="highlighter-rouge">pageDirectory/id</code>,</li>
+          <li>and the first line of the file is the URL,</li>
+          <li>and the second line of the file is the depth,</li>
+          <li>and the rest of the file is the page content.</li>
+        </ol>
+      </li>
+      <li>if the page depth is &lt; <code class="highlighter-rouge">maxDepth</code>, explore the page’s contents:
+        <ol>
+          <li>use <em>pagescanner</em> to parse the page to extract all its embedded URLs;</li>
+          <li>for each extracted URL,
+            <ol>
+              <li>‘normalize’ the URL (see below)</li>
+              <li>if that URL is not ‘internal’ (see below), ignore it;</li>
+              <li>try to insert that URL into the <em>hashtable</em> of URLs seen
+                <ol>
+                  <li>if it was already in the table, do nothing;</li>
+                  <li>if it was added to the table,
+                    <ol>
+                      <li>make a new <em>page</em> for that URL, at depth+1</li>
+                      <li>add new page to the <em>bag</em> of pages to be crawled</li>
+                    </ol>
+                  </li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+</ol>
+
+<p><strong>normalize the URL</strong> means to convert it into a clean, canonical form</p>
+
+<p><strong>internal</strong> means the URL stays within the CS50 <a href="http://old-www.cs.dartmouth.edu/">playground</a>, that is,
+<code class="highlighter-rouge">
+	http://old-www.cs.dartmouth.edu/
+</code></p>
+
+<p>The crawler cycle completes and stops retrieving new webpages once it has reached the depth specified by the <code class="highlighter-rouge">depth</code> parameter. For example, if <code class="highlighter-rouge">maxDepth</code> is 0 then the crawler retrieves only the seed page. If <code class="highlighter-rouge">maxDepth</code> is 1 then the crawler retrieves only the seed page and the pages of the URLs embedded in the seed page. If <code class="highlighter-rouge">maxDepth</code> is 2 then all the pages pointed to by the pages with their URL embedded in the seed page are retrieved. The depth parameter indirectly determines the number of pages that the crawler will retrieve.</p>
+
+<h3 id="dataflow-through-modules">Dataflow through modules</h3>
+
+<ol>
+  <li><em>main</em> parses parameters and passes them to the crawler.</li>
+  <li><em>crawler</em> uses a bag to track pages to explore, and hashtable to track pages seen; when it explores a page it gives the page URL to the pagefetcher, then the result to pagesaver, then to the pagescanner.</li>
+  <li><em>pagefetcher</em>, fetches a page from a URL and returns.</li>
+  <li><em>pagesaver</em>, simply outputs a page to the the appropriate file.</li>
+  <li><em>pagescanner</em>, extracts URLs from a page and returns one at a time.</li>
+</ol>
+
+<h3 id="major-data-structures">Major data structures</h3>
+
+<p>Three helper modules provide data structures:</p>
+
+<ol>
+  <li><em>bag</em> of page (URL, depth) structures</li>
+  <li><em>set</em> of URLs (used by hashtable)</li>
+  <li><em>hashtable</em> of URLs</li>
+</ol>
+
+<h3 id="testing-plan">Testing plan</h3>
+
+<p><em>Unit testing</em>.  Write a small test program for each module to make sure it does what it’s supposed to do.  (You may not have time to write extensive unit tests in this lab, but you should do some testing before integration.)</p>
+
+<p><em>Integration testing</em>.  Assemble the crawler and test it as a whole.  In each case, examine the output files carefully to be sure they have the contents of the correct page, with the correct URL, and the correct depth.  Ensure that no pages are missing or duplicated.  Print “progress” indicators from the crawler as it proceeds (e.g., print each URL explored, and each URL found in the pages it explores) so you can watch its progress as it runs.</p>
+
+<ol>
+  <li>
+    <p>Test the program with various forms of incorrect command-line arguments to ensure that its command-line parsing, and validation of those parameters, works correctly.</p>
+  </li>
+  <li>
+    <p>Test the crawler with a <code class="highlighter-rouge">seedURL</code> that points to a non-existent server.</p>
+  </li>
+  <li>
+    <p>Test the crawler with a <code class="highlighter-rouge">seedURL</code> that points to a valid server but non-existent page.</p>
+  </li>
+  <li>
+    <p>Construct a simple, closed set of cross-linked web pages to crawl. Ensure that some page(s) are mentioned multiple times within a page, and multiple times across the set of pages.  Ensure there is a loop (a cycle in the graph of pages).  By building this little site, you know exactly what set of pages should be crawled, at what depths, and you know where your program might trip up.</p>
+  </li>
+  <li>
+    <p>Point the crawler at a page in that site, and explore at depths 0, 1, 2.  Verify that the files created match expectations.</p>
+  </li>
+  <li>
+    <p>Repeat with a different seed page in that same site.  If the site is indeed a graph, with cycles, there should be several interesting starting points.</p>
+  </li>
+  <li>Find a safe playground to explore - such as <a href="http://old-www.cs.dartmouth.edu/~cs50">the CS50 website</a> - and point the crawler at that site. Explore at depths 0, 1, 2. Verify that the files created match expectations.
+    <ol>
+      <li>For maximum safety, always check whether the page you are about to explore is ‘internal’ (within the playground); otherwise, don’t explore it.  This way, if your crawler runs amok, it won’t disturb other web servers.</li>
+    </ol>
+  </li>
+  <li>When you are confident that your crawler runs well, test it on <code class="highlighter-rouge">http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html</code> or with a greater depth - but be ready to kill it if it seems to be running amok.</li>
+</ol>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">CS50 Summer 2016 -- Dartmouth College</h2>
+
+    <p> <font size=-1> 
+    	This version of the course is based upon those designed by 
+    	Professors Kotz, Palmer, Campbell, and Balkcom. 
+	I am deeply indebted to these outstanding educators.
+    -- <a href="/~xia/">Xia Zhou</a>
+       </font> 
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
