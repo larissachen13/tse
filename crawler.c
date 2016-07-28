@@ -74,7 +74,6 @@ int main(int argc, char* argv[]) {
   //start the crawler starting from the seed page until maxDepth
   crawler(seedPage, dir, maxDepth);
 
-  //clean
 }
 
 /*
