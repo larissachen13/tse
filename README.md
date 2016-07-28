@@ -9,14 +9,11 @@
 
 ### usage: `crawler seedURL pageDirectory maxDepth`
 ### where:
-  * seedURL is a valid internalURL meaning that it's a URL that can be
-    normalized according to the web module and begins w/ the prefix
-    http://old-www.cs.dartmouth.edu/
-  * pageDirectory is an existing writeable directory to store the saved
-    pages of the crawling process
-  * maxDepth represents a valid integer between 0 and 10 inclusive indicating
-    the depth of the recursion
-
+  * seedURL is a valid internal URL where crawling begins
+  * crawl all pages reachable from seedURL, following href links to a 
+    maximum depth of max depth 
+  * each page "explored" is saved to pageDirectory/id, each id is unique and 
+    increments by one for each page 
 
 ### output:
   HTML pages saved as separate files w/ unique ids in the pageDirectory
@@ -33,8 +30,15 @@
 * 1- Invalid arguments
 
 ## Assumptions
-  * Arguments follow previously described standards
-  * 
+  *seedURL is a valid internalURL meaning that it's a URL that can be
+    normalized according to the web module and begins w/ the prefix
+    http://old-www.cs.dartmouth.edu/
+  * pageDirectory is an existing writeable directory to store the saved
+    pages of the crawling process
+  * maxDepth represents a valid integer between 0 and 10 inclusive indicating
+    the depth of the recursion
+  * maxDepth must be an integer and not a floating-point value 
+
   
 ## Limitations
   * If a URL besides the seedURL is invalid and points to a non-existing page,
