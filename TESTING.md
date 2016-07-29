@@ -48,7 +48,7 @@ URL to explore is http://old-www.cs.dartmouth.edu/~cs50/data/tse/index.html.
 
 
 
- ## Starting w/ a different URL
+## Starting w/ a different URL
  `crawler http://old-www.cs.dartmouth.edu/~larissachen13/tse2 pages3 2`
  I also tested if I started at **#3** as my Seed URL and a depth of 2.
  * explore **#4 #2 and #1** at depth of 1.  Also
