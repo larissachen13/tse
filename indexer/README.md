@@ -20,13 +20,13 @@
 
 ### output:
   new file holding the word to document index where:
-    * one line per word, one word per line
-    * each line provides the word and one or more (docID, count) pairs, in the format
+  * one line per word, one word per line 
+  * each line provides the word and one or more (docID, count) pairs, in the format
       word docID count [docID count]…
-    * word is a string of lower-case letters,
-    * docID is a positive non-zero integer,
-    * count is a positive non-zero integer,
-    * the word and integers are separated by spaces.
+  * word is a string of lower-case letters,
+  * docID is a positive non-zero integer,
+  * count is a positive non-zero integer,
+  * the word and integers are separated by spaces.
 
 ### Example Command Lines
 
@@ -55,8 +55,8 @@
 ### compiling: `make`
 ### usage: `indexetest oldIndexFilename newIndexFilename`
 ### where:
-      * oldIndexFilename is the name of a file produced by the indexer, and
-      * newIndexFilename is the name of a file into which the index should be written.
+  * oldIndexFilename is the name of a file produced by the indexer, and
+  * newIndexFilename is the name of a file into which the index should be written.
 
 ### output:
   new file holding the resaved word to document index where:
