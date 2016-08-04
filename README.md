@@ -10,6 +10,7 @@
   2. crawler - contains crawler module
     * build  `make` builds crawler standalone program
   3. data
+    * holds the crawler output data used by indexer 
   4. indexer - contains indexer module
     * build `make` builds indexer program that takes in output from crawler program
       as input
