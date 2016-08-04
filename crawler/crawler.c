@@ -9,14 +9,14 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <unistd.h>
-#include "./lib/set/set.h"
-#include "./lib/bag/bag.h"
-#include "./lib/counters/counters.h"
-#include "./lib/hashtable/hashtable.h"
-#include "./lib/memory/memory.h"
-#include "web.h"
+#include "../lib/set/set.h"
+#include "../lib/bag/bag.h"
+#include "../lib/counters/counters.h"
+#include "../lib/hashtable/hashtable.h"
+#include "../lib/memory/memory.h"
+#include "../common/web.h"
 
-#define DEBUG
+// #define DEBUG
 
 bool isWriteableDirectory(char* dir);
 int isInteger(char* integer);
@@ -249,7 +249,7 @@ void pageScanner(WebPage* target, bag_t* bag, hashtable_t* pages) {
              logr("Added", target->depth, result);
            #endif
          }  else {
-           free(result); 
+           free(result);
            free(dummyData);
          }
        }  else {

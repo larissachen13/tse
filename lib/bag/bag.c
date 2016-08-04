@@ -139,3 +139,17 @@ static bagitem_t *bagitem_new(void *data) {
   }
   return new;
 }
+
+/* Iterate over all items in bag (in undefined order):
+ * call itemfunc for each item, passing (arg, data).
+ */
+void bag_iterate(bag_t *bag, void (*itemfunc)(void *arg, void *data),
+  void *arg) {
+    if (bag != NULL && itemfunc != NULL) {
+      bagitem_t* curr = bag->head;
+      while(curr != NULL){
+        (*itemfunc)(arg, curr->data);
+        curr = curr->next;
+      }
+    }
+  }

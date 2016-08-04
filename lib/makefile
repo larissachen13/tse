@@ -23,7 +23,7 @@ set/set.o: set/set.c set/set.h
 	cd set; $(MAKE) set.o
 
 counters/counters.o: counters/counters.c counters/counters.h
-	cd  counters; $(MAKE) counters.o
+	cd counters; $(MAKE) counters.o
 
 hashtable/hashtable.o: hashtable/hashtable.c hashtable/hashtable.h
 	cd hashtable; $(MAKE) hashtable.o
@@ -38,4 +38,4 @@ clean:
 	rm -f *~
 	rm -f *.o
 	rm -f $(LIB)
-	cd memory; $(MAKE) $@
+	cd memory; $(MAKE) clean

@@ -1,33 +1,14 @@
-# Makefile TEMPLATE for 'crawler' module
-#
-# David Kotz, April 2016
-# updated by Xia Zhou, July 2016
+SUBDIRS = common crawler indexer lib
 
-PROG = crawler
-OBJS = crawler.o web.o
-LIBS = -lcurl
-LLIBS = lib/cs50ds.a
-
-CFLAGS = -Wall -pedantic -std=c11 -ggdb
-CC = gcc
-MAKE = make
-
-# build the crawler
-$(PROG): $(OBJS) $(LLIBS)
-	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
-
-# crawler source dependencies; add others as needed
-crawler.o: web.h
-web.o: web.h
-
-# build the library
-lib/cs50ds.a:
-	cd lib; $(MAKE)
+all:
+	@for a in $(SUBDIRS); do \
+  if [ -d $$a ]; then \
+    $(MAKE) -C $$a; \
+  fi; \
+  done;
 
 .PHONY: clean
 
 clean:
-	rm -f *~
-	rm -f *.o
-	rm -f $(PROG)
-	cd lib; $(MAKE) clean
+	@for i in $(SUBDIRS); do \
+		(cd $$i; $(MAKE) clean); done

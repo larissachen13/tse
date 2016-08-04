@@ -27,4 +27,11 @@ bool set_insert(set_t *set, char *key, void *data);
 
 void set_delete(set_t* toDestroy);
 
+/* Iterate over all items in set (in undefined order):
+ * call itemfunc for each item, passing (arg, key, data).
+ */
+void set_iterate(set_t *set,
+		  void (*itemfunc)(void *arg, const char *key, void *data),
+		  void *arg);
+
 #endif

@@ -119,3 +119,17 @@ void hashtable_delete(hashtable_t* ht) {
     free(ht);
   }
 }
+
+/* Iterate over all items in hashtable (in undefined order):
+ * call itemfunc for each item, with (arg, key, data).
+ */
+void hashtable_iterate(hashtable_t *ht, void (*itemfunc)(void *arg,
+  const char *key,void *data), void *arg) {
+    if (ht != NULL && itemfunc!= NULL) {
+      for (int i = 0; i < ht->size; i++) {
+        if (ht->slots[i]!= NULL) {
+          set_iterate(ht->slots[i], itemfunc, arg);
+        }
+      }
+    }
+  }

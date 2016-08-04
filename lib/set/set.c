@@ -148,3 +148,17 @@ void set_delete(set_t* set) {
     free(set);
   }
 }
+
+/* Iterate over all items in set (in undefined order):
+ * call itemfunc for each item, passing (arg, key, data).
+ */
+void set_iterate(set_t *set, void (*itemfunc)(void *arg, const char *key,
+  void *data), void *arg) {
+    if (set != NULL && itemfunc != NULL) {
+      setitem_t* curr = set->head;
+      while(curr != NULL) {
+        (*itemfunc)(arg, curr->key, curr->data);
+        curr = curr->next;
+      }
+    }
+  }
