@@ -1,4 +1,3 @@
-
 # Indexer
 ## Usage:
   `indexer.c` is a standalone program that builds a word to document->word_count
@@ -10,9 +9,9 @@
 ### compiling: `make`
 ### usage: `indexer pageDirectory indexFilename`
 ### where:
-      * pageDirectory is a directory produced by the crawler, and
-      * indexFilename is the name of a file into which the index should be written.
-      * documents from the pageDirectory has..
+    * pageDirectory is a directory produced by the crawler, and
+    * indexFilename is the name of a file into which the index should be written.
+    * documents from the pageDirectory has..
         * a unique document ID which starts at 1 and increments for each new document,
         * a filename of form pageDirectory/id,
         * a first line representing the URL,
