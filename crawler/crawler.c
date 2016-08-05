@@ -24,7 +24,7 @@ void crawler(WebPage* seed, char* dirName, int max);
 bool pageFetcher(WebPage* target);
 bool pageSaver(char* dir, WebPage* target, int id);
 void pageScanner(WebPage* target, bag_t* bag, hashtable_t* pages);
-inline static void logr(const char *word, const int depth, const char *url);
+// inline static void logr(const char *word, const int depth, const char *url);
 void deletePage(void* data);
 
 /*
@@ -322,10 +322,10 @@ int isInteger(char* integer) {
 }
 
 // log one word (1-9 chars) about a given url
-inline static void logr(const char *word, const int depth, const char *url)
-{
-  printf("%2d %*s%9s: %s\n", depth, depth, "", word, url);
-}
+// inline static void logr(const char *word, const int depth, const char *url)
+// {
+//   printf("%2d %*s%9s: %s\n", depth, depth, "", word, url);
+// }
 
 /*
  * deletePage- frees page contents

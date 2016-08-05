@@ -34,6 +34,7 @@
    char word[len];
    int doc_id, count;
    counters_t *ctr;
+   ctr = NULL; 
 
    while((fscanf(readfile, "%s", word)) == 1) {
      counters_t *ctr = assertp(counters_new(), "counters");
