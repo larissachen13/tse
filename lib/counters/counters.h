@@ -47,4 +47,6 @@ void counters_iterate(counters_t *ctrs,
 		      void (*itemfunc)(void *arg, const int key, int count),
 		      void *arg);
 
+ void ctr_iter_print(void *arg, int key, int count); 
+
 #endif
