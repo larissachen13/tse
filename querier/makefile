@@ -5,8 +5,8 @@
 # updated by Larissa Chen, August 2016
 PROG = querier
 OBJS = querier.o
-LIBS = -lcurl
-LLIBS = ../common/common.a ../lib/cs50ds.a 
+LIBS = -lcurl -lm
+LLIBS = ../common/common.a ../lib/cs50ds.a
 
 CFLAGS = -Wall -pedantic -std=c11 -ggdb
 CC = gcc

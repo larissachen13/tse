@@ -19,6 +19,34 @@
   * The content of document files in pageDirectory follow the format as defined in the crawler specs; thus your code (to read a document file) need not have extensive error checking.
   * The content of the file named by indexFilename follows our Index file format; thus your code (to recreate an index structure by reading a file) need not have extensive error checking.
 
-Design Spec
+# Design Spec
+#### Data Structures
+  * `char *queries[]`- array of query strings from stdin
+  * `char *tokenized[]` - array of each string in query
+  *  `index_t *index` - hashtable that holds index of words to docs
+  * `counters_t *docs` - returned counterset for all matches of query
+    * `counters_t *sum` - accumulator for the "or" queries
+    * `counters_t *prod` - accumulator for the "and" queries
+  * `doc_t sortedDocs[]` - array of sorted doc_t structs
+#### Pseudocode:
+  1. Validate Arguments
+  2. Store all queries in `queries[]`
+  3. Loop through each query
+  4. Parse each query into individual word tokens and store in `tokenized`
+      * while tokenizing check for bad characters in query
+  5. Print a clean version of the query
+      * while printing check for "and/or" syntax errors
+  6. If query is acceptable, continue
+  7. Identify the documents that satisfy the query
+      * Loop through the query, evaluating each "andSequence", result of each
+        andSequence is stored in accumulator `counters_t *prod`
+      * Evaluate each andSequence with `ctrsMultiply` and `ctrMultiplyEach`, which
+        iterate over one counter searching for each key in second and adjusting the first
+      * After each andSequence, evaluate the or sum using `sum` as accumulator
+      * Evaluate each or sum with `ctrsPlus` and `ctrsAddEach`, iterate over one counter
+        searching and incrementing or adding to the second
+  8. sort the final docs counterset into a sorted array of doc structs
+  9. loop over the sorted array of docs and print each one
+  10. cleanup 
 
 Testing Plan

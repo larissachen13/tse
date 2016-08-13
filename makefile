@@ -1,4 +1,4 @@
-SUBDIRS = common crawler indexer lib
+SUBDIRS = common crawler indexer lib querier
 
 all:
 	@for a in $(SUBDIRS); do \

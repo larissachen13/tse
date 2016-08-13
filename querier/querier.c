@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <math.h>
 #include "../lib/set/set.h"
 #include "../lib/bag/bag.h"
 #include "../lib/counters/counters.h"
@@ -22,6 +23,7 @@
 #include "../common/webpage.h"
 #include "../common/file.h"
 
+typedef struct doc doc_t;
 typedef struct doc {
   int doc;
   int count;
@@ -39,7 +41,8 @@ void ctrAddEach(void *arg, int key, int count);
 void ctrMultiplyEach(void *arg, int key, int count);
 void ctrs_size(void *arg, int key, int count);
 void ctrs_populate(void *arg, int key, int count);
-doc_t *sort(counters_t *toSort);
+void sortAndPrint(counters_t *toSort, char *dir);
+int compare(const void *a, const void *b);
 int min(int x, int y);
 
 int main (int argc, char* argv[]) {
@@ -51,7 +54,6 @@ int main (int argc, char* argv[]) {
   char *query;
   char *tokenized[MAX];
   bool error;
-  doc_t *docsArray;
 
   // validate command-line
   if (argc != 3) {
@@ -86,11 +88,12 @@ int main (int argc, char* argv[]) {
   for (int i = 0; i < numQueries; i++) {
 
     // tokenize the query
+    error = false;
     numToken = tokenize(tokenized, queries[i]);
-    if (numToken == -1)
+    if (numToken == -1) // returns -1 if encounters 'bad character'
       error = true;
     if (!error) {
-      if(!printAndValidate(tokenized, numToken)) {
+      if(!printAndValidate(tokenized, numToken)) {  // returns false if there are literal "and"/"or" errors 
         error = true;
       }
 
@@ -98,19 +101,22 @@ int main (int argc, char* argv[]) {
         indexfile = fopen(argv[2], "r");
         index_t *index = assertp(hashtable_new(100000, &deleteCounter), "hashtable");
         index_load(index, indexfile);
+        fclose(indexfile);
 
         // combine the counters
         counters_t *docs = combineQueries(index, tokenized, numToken);
 
-        // sort docs counter
-        docsArray = sort(docs);
+        // sort and print docs counter
+        sortAndPrint(docs, dir);
 
-        int size = sizeof(docsArray)/sizeof(doc_t);
-      for (int i = 0; i < size; i++) {
-          printf("%d %d \n", docsArray[i].doc, docsArray[i].count);
+        //clean up
+        if (docs != NULL)
+          counters_delete(docs);
+        hashtable_delete(index);
+        for (int i = 0; i < numQueries; i++) {
+          if (queries[i] != NULL)
+            free(queries[i] );
         }
-
-        // counters_iterate(docs, &ctr_iter_print, &indexfile);
       }
     }
   }
@@ -264,19 +270,44 @@ void ctrMultiplyEach(void *arg, int key, int count) {
   counters_set(ops[1], key, min(count, inFirst));
 }
 
-doc_t *sort(counters_t *toSort) {
+void sortAndPrint(counters_t *toSort, char *dir) {
   doc_t *sortedDocs;
-  int i;
+  char *filename;
+  int doc, count;
+  char *url;
 
   //iterate to find out size
-  int count = 0;
-  counters_iterate(toSort, &ctrs_size, &count);
+  int numMatches = 0;
+  counters_iterate(toSort, &ctrs_size, &numMatches);
 
-  if (count != 0) {
-    sortedDocs = malloc(count*sizeof(doc_t));
-    counters_iterate(toSort, &ctrs_populate, sortedDocs);
+  if (numMatches != 0) {
+      sortedDocs = malloc(numMatches*sizeof(doc_t));
+      counters_iterate(toSort, &ctrs_populate, &sortedDocs);
+      sortedDocs = sortedDocs-numMatches;
+      qsort(sortedDocs, numMatches, sizeof(doc_t), compare);
+  } else {
+    sortedDocs = NULL;
   }
-  return sortedDocs;
+  printf("Matches %d documents (ranked): \n", numMatches);
+  //print each match
+  for (int i = 0; i < numMatches; i++) {
+    doc = sortedDocs[i].doc;
+    count = sortedDocs[i].count;
+    filename = malloc(strlen(dir)+ (int)log10(doc) + 10);
+    sprintf(filename, "%s/%d", dir, doc);
+    FILE *docFile = fopen(filename, "r");
+    if (docFile != NULL) {
+      url = readline(docFile);
+      printf("score  %d doc\t%d: %s\n", count, doc, url);
+      if (url != NULL)
+        free(url);
+    }
+    fclose(docFile);
+    free(filename);
+  }
+  if (sortedDocs != NULL) {
+    free(sortedDocs);
+  }
 }
 
 void ctrs_size(void *arg, int key, int count) {
@@ -288,10 +319,19 @@ void ctrs_size(void *arg, int key, int count) {
 }
 
 void ctrs_populate(void *arg, int key, int count) {
-  doc_t *docPointer;
-  docPointer = (doc_t *)arg;
-  docPointer = { key, count};
-  docPointer++;
+  doc_t **docPointer;
+  docPointer = (doc_t **)arg;
+  if (count != 0) {
+    (*docPointer)->doc = key;
+    (*docPointer)->count = count;
+    *docPointer = *docPointer + 1;
+  }
+}
+
+int compare(const void *a, const void *b) {
+  doc_t *x = (doc_t *) a;
+  doc_t *y = (doc_t *) b;
+  return (y->count - x->count);
 }
 
 int min(int x, int y) {
