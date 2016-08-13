@@ -13,14 +13,14 @@
  * indexFilename is the name of a file into which the index should be written.
  * documents from the pageDirectory has..
    * a unique document ID which starts at 1 and increments for each new document,
-   * a filename of form pageDirectory/id, 
+   * a filename of form pageDirectory/id,
    * a first line representing the URL,
    * a second line of the depth,
    * its remaining lines representing the pages content
 
 ### output:
   new file holding the word to document index where:
-  * one line per word, one word per line 
+  * one line per word, one word per line
   * each line provides the word and one or more (docID, count) pairs, in the format
       word docID count [docID count]…
   * word is a string of lower-case letters,
@@ -39,12 +39,12 @@
   * files in the pageDirectory are formatted according to the crawler program
     standards
   * no gaps exist in the document ids
-  * instances of words can only be positive 
+  * instances of words can only be positive
+  * Empty Queries are ignored
 
 ## Limitations
-  * content will not be parsed correctly if it isnt in the correct html format 
-
-
+  * Does not process empty queries, that is program will not attempt to match
+    the empty query w/ any documents and no s
 
 # Indextest
 ## Usage:

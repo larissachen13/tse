@@ -1,0 +1,18 @@
+Query: current or tianxing and ends or larissa and indebted or start or sure or students and systems or markdown and meetings or access and tell and projects
+Matches 6 documents (ranked):
+score  7 doc	10: http://old-www.cs.dartmouth.edu/~xia/
+score  6 doc	5: http://old-www.cs.dartmouth.edu/~cs50/Logistics/
+score  1 doc	1: http://old-www.cs.dartmouth.edu/~cs50/index.html
+score  1 doc	2: http://old-www.cs.dartmouth.edu/~cs50/
+score  1 doc	6: http://old-www.cs.dartmouth.edu/~cs50/Resources/
+score  1 doc	8: http://old-www.cs.dartmouth.edu/~cs50/Project/
+
+# Doc count for each andSequence
+current: 10 1
+tianxing and end: 10 1
+larissa and indebted: 8 1
+start: 5 1 6 1
+sure: 5 3
+students and systems: 1 1 2 1 5 1 10 5
+markdown and meetings:
+access and tell and projects: 5 1 

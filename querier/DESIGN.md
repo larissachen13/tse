@@ -47,6 +47,22 @@
         searching and incrementing or adding to the second
   8. sort the final docs counterset into a sorted array of doc structs
   9. loop over the sorted array of docs and print each one
-  10. cleanup 
+  10. cleanup
 
 Testing Plan
+  1. Test command-line arguments
+    * Enter w/ more than 2 command-line arguments
+    * Check w/ directory not from crawler output
+  2. Check for error for non-letter queries
+  3. Check for error for queries w/ wrong syntax
+    * and/or at beginning or end of query
+    * and/or adjacent
+  4. Check for basic queries
+    * simple or queries
+    * simple and queries
+  5. Combine for more complex queries
+    * xx or xxxx and xxx or xxx and xxx and xxxx
+    * xx or xxxx xxxx or xxx xxx xxxx (implicit and)
+  6. Check empty queries
+  7. check that queries with more whitespace should be the same than queries w/ less whitespace
+  8. Check for memory leaks 
