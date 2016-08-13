@@ -21,9 +21,11 @@
   printed summary of the query results in the format:
   * header - displays number of documents matched: `Matched: # documents`
   * list of satisfied documents in decreasing rank of score
-  * each doc summary displays score, docid, url
+  * each doc summary displays score, docid, url: `score  39 doc   6: http://old-www.cs.dartmouth.edu/~cs50/Resources/`
+
   score is calculated by adding one for any doc that satifies a certain andsequence
-  and by adding one for any doc that satifies any element in an or sequence 
+  and by adding one for any doc that satifies any element in an or sequence
+
   if no documents satisfy, header will indicate no documents matched
 
 ### Example Command Lines
